@@ -7,7 +7,7 @@ service cloud.firestore {
     // ⚠️ REMPLACE par l'adresse Gmail de l'admin, en minuscules.
     function isAdmin() {
       return signedIn()
-        && request.auth.token.get('email', '') == 'ton.adresse@gmail.com'
+        && request.auth.token.get('email', '') == 'tperez.insa@gmail.com'
         && request.auth.token.get('email_verified', false) == true;
     }
 
