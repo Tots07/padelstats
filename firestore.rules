@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // ⚠️ REMPLACE par l'adresse Gmail de l'admin, en minuscules.
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.get('email', '') == 'ton.adresse@gmail.com'
+        && request.auth.token.get('email_verified', false) == true;
+    }
+
+    function claimPath() {
+      return /databases/$(database)/documents/claims/$(request.auth.uid);
+    }
+    function hasClaim() { return signedIn() && exists(claimPath()); }
+    function myPlayer() { return get(claimPath()).data.playerId; }
+
+    // Liste des joueurs : noms + alias. Lisible par tout compte connecté
+    // (nécessaire pour afficher « Qui es-tu ? »). Écriture : admin seulement.
+    match /players/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Codes d'accès par joueur : admin seulement (jamais lisibles par les invités).
+    match /invites/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // « Qui je suis » pour un appareil invité. Création possible seulement
+    // avec le bon code du joueur choisi.
+    match /claims/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['playerId', 'code'])
+        && request.resource.data.playerId is string
+        && request.resource.data.code is string
+        && exists(/databases/$(database)/documents/invites/$(request.resource.data.playerId))
+        && request.resource.data.code ==
+           get(/databases/$(database)/documents/invites/$(request.resource.data.playerId)).data.code;
+      allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
+    }
+
+    // Analyses : l'admin lit/écrit tout ; un invité lit uniquement les
+    // analyses où son joueur figure (champ playerIds), sans jamais écrire.
+    match /matches/{id} {
+      allow read: if isAdmin() || (hasClaim() && myPlayer() in resource.data.playerIds);
+      allow write: if isAdmin();
+    }
+  }
+}

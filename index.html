@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Padel Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf0f6;--sf:#fff;--ink:#10243a;--mut:#5b6f85;--ln:#d3dde8;--ct:#1b4f9c;--ctink:#fff;--ball:#c9e500;--ballink:#1c2600;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1928;--sf:#13283f;--ink:#e8f0f8;--mut:#92a7bd;--ln:#274460;--ct:#5a96e6;--ctink:#06182c;--ball:#d4ee1a}}
+:root[data-theme="dark"]{--bg:#0b1928;--sf:#13283f;--ink:#e8f0f8;--mut:#92a7bd;--ln:#274460;--ct:#5a96e6;--ctink:#06182c;--ball:#d4ee1a}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.4 Barlow,system-ui,sans-serif;padding-bottom:24px}
+header{padding:12px 12px 0;max-width:1600px;margin:0 auto}
+h1{font:700 28px/1 "Barlow Semi Condensed",sans-serif;margin:0 0 12px}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--ln)}
+.tabs button{font:600 17px "Barlow Semi Condensed",sans-serif;padding:10px 16px;border:0;background:none;color:var(--mut);border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--ball)}
+main{max-width:1600px;margin:0 auto;padding:10px 12px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ct);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px}
+.chips button{flex:none;font:600 15px Barlow,sans-serif;padding:8px 14px;border-radius:999px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--ct);color:var(--ctink);border-color:var(--ct)}
+.court{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:640px){.court{grid-template-columns:1fr 1fr}}
+.net{grid-column:1/-1;display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px}
+.net::before,.net::after{content:"";flex:1;border-top:2px dashed var(--ln)}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.card.A{border-top:6px solid var(--ct)}.card.B{border-top:6px solid var(--ball)}
+.ch{display:flex;align-items:center;gap:8px;padding:10px 12px 4px}
+.ch input{flex:1;min-width:0;font:700 20px "Barlow Semi Condensed",sans-serif;color:var(--ink);background:none;border:0;border-bottom:1.5px dashed transparent;padding:2px 0}
+.ch input:hover,.ch input:focus{border-color:var(--ln)}
+.pos{font-size:13px;color:var(--mut)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-top:1px solid var(--ln)}
+.row.fb{flex-wrap:wrap}
+.lbl{font-weight:500}
+.pair{display:flex;gap:14px;margin-left:auto}
+.pair div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.pair small{font-size:12px;color:var(--mut)}
+.ctr{display:flex;align-items:center;gap:6px}
+.ctr b{min-width:30px;text-align:center;font:700 26px "Barlow Semi Condensed",sans-serif}
+.ctr button{width:44px;height:44px;border-radius:50%;font:600 24px/1 Barlow,sans-serif;cursor:pointer;border:2px solid var(--ct);background:none;color:var(--ct);padding:0}
+.ctr button.p{background:var(--ct);color:var(--ctink)}
+.ctr button:active{transform:scale(.92)}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--sf);border-top:1px solid var(--ln);display:flex;gap:12px;align-items:center;justify-content:center}
+.bar button{font:600 17px Barlow,sans-serif;padding:12px 20px;border-radius:10px;border:0;background:var(--ball);color:var(--ballink);cursor:pointer}
+.bar button:disabled{opacity:.4;cursor:default}
+.bar span{color:var(--mut);font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrap{max-width:1000px;margin:0 auto;overflow-x:auto;border:1px solid var(--ln);border-radius:12px;background:var(--sf)}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{padding:8px 12px;text-align:center;border-top:1px solid var(--ln)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--sf)}
+thead th{border-top:0;font:700 17px "Barlow Semi Condensed",sans-serif;border-bottom:4px solid var(--ln)}
+thead th.A{border-color:var(--ct)}thead th.B{border-color:#e04a3f}
+tr.sec th{background:var(--bg);text-align:left;font:600 15px Barlow,sans-serif;color:var(--mut)}
+td b{font:700 20px "Barlow Semi Condensed",sans-serif}
+td small{display:block;font-size:12px;color:var(--mut)}
+td.top b{background:var(--ball);color:var(--ballink);padding:0 8px;border-radius:6px}
+.foot{max-width:1000px;margin:16px auto 0;display:flex;justify-content:flex-end}
+.foot button{font:500 15px Barlow,sans-serif;padding:8px 14px;border-radius:8px;border:1.5px solid var(--ln);background:none;color:var(--mut);cursor:pointer}
+.quads{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;grid-auto-flow:column;gap:10px}
+
+.q{background:var(--sf);border:1px solid var(--ln);border-top:6px solid var(--ct);border-radius:12px;padding:4px 8px 8px}
+.q.B{border-top-color:#e04a3f}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.k{display:flex;flex-direction:column;gap:8px}
+
+.e{border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.e h3{margin:0;padding:4px 8px;font:600 15px "Barlow Semi Condensed",sans-serif;background:var(--bg)}
+.r{display:grid;grid-template-columns:1fr 70px;align-items:center;gap:6px;padding:2px 6px;border-top:1px solid var(--ln);font-size:12.5px;line-height:1.15}
+.r.f{grid-template-columns:1fr 70px 70px}
+.r.hd{border-top:0;padding-top:2px;padding-bottom:0;color:var(--mut);font-size:11px;text-align:center}
+.r.hd i{font-style:normal}
+.c{display:flex;align-items:center;gap:4px}
+.c input{width:34px;height:26px;text-align:center;font:700 18px "Barlow Semi Condensed",sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:0;-moz-appearance:textfield}
+.c input::-webkit-inner-spin-button,.c input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.c button{flex:1;height:26px;border-radius:6px;font:700 20px/1 Barlow,sans-serif;border:0;background:var(--ct);color:var(--ctink);padding:0;cursor:pointer}
+.c button:active{transform:scale(.94)}
+.q{min-width:0}
+.q.m .r{direction:rtl}
+.q.m .r>*{direction:ltr}
+.q.m .r>span{text-align:right}
+.q.m .c{flex-direction:row-reverse}
+.q.m .e h3,.q.m .ch input{text-align:right}
+.q.m .ch{flex-direction:row-reverse}
+@media(max-width:1000px){.quads{gap:6px}.q{padding:2px 4px 4px}.cols{gap:4px}.r{grid-template-columns:1fr 56px;font-size:11px;gap:3px;padding:2px 3px}.r.f{grid-template-columns:1fr 56px 56px}.c input{width:26px;font-size:15px}.c button{font-size:17px}.ch input{font-size:16px}.pos{display:none}.e h3{font-size:13px;padding:3px 5px}}
+.nm{flex:1;min-width:0;font:700 20px "Barlow Semi Condensed",sans-serif}
+.q.m .nm{text-align:right}
+.big{font:600 17px Barlow,sans-serif;padding:12px 20px;border-radius:10px;border:0;background:var(--ball);color:var(--ballink);cursor:pointer}
+.big.alt,.alt{background:none;border:1.5px solid var(--ln);color:var(--ink)}
+h2{font:700 22px "Barlow Semi Condensed",sans-serif;margin:12px 0 8px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px}
+.lst{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:760px}
+.lst li{display:flex;gap:8px}
+.it{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;padding:12px 14px;background:var(--sf);border:1px solid var(--ln);border-radius:10px;color:var(--ink);font:500 15px Barlow,sans-serif;cursor:pointer}
+.it b{font:700 18px "Barlow Semi Condensed",sans-serif}
+.it span{color:var(--mut);font-size:14px}
+.x{border:1px solid var(--ln);background:none;border-radius:10px;color:var(--mut);padding:0 14px;cursor:pointer;font:500 15px Barlow,sans-serif}
+.x.ask{color:#d4382c;border-color:#d4382c}
+.add{display:flex;gap:8px;max-width:760px;margin-bottom:12px}
+.add input{flex:1;min-width:0;font:500 16px Barlow,sans-serif;padding:10px 12px;border:1.5px solid var(--ln);border-radius:10px;background:var(--sf);color:var(--ink)}
+.bk{border:0;background:none;color:var(--ct);font:600 15px Barlow,sans-serif;padding:4px 0;cursor:pointer}
+.sub{color:var(--mut);margin:-6px 0 10px}
+.mut{color:var(--mut)}
+dialog{border:1px solid var(--ln);border-radius:14px;background:var(--sf);color:var(--ink);padding:20px;width:min(560px,94vw)}
+dialog::backdrop{background:rgba(5,15,25,.55)}
+dialog h2{margin-top:0}
+dialog label{display:block;font-weight:600;margin:10px 0 0}
+dialog label small{font-weight:400;color:var(--mut)}
+dialog input,dialog select{display:block;width:100%;margin-top:4px;font:400 16px Barlow,sans-serif;padding:9px 10px;border:1.5px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)}
+.dact{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.dact .alt{padding:12px 16px;border-radius:10px;font:500 16px Barlow,sans-serif;cursor:pointer}
+.err{color:#d4382c;min-height:1.2em;margin:8px 0 0}
+@media(max-width:1000px){.nm{font-size:16px}}
+.sl{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.kp>div{border:1px solid var(--ln);border-radius:8px;padding:8px 10px}
+.kp>.wide{grid-column:1/-1}
+.kp span{display:block;font-size:13px;color:var(--mut)}
+.kp b{display:block;font:700 34px/1.15 "Barlow Semi Condensed",sans-serif}
+.kp b.good{display:inline-block;background:var(--ball);color:var(--ballink);padding:0 10px;border-radius:6px}
+.bar2{height:8px;border-radius:4px;background:var(--bg);margin:4px 0 4px;overflow:hidden}
+.bar2 i{display:block;height:100%;background:var(--ct)}
+.q.B .bar2 i{background:#e04a3f}
+.hrow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.hrow h1{font-size:22px;margin:0}
+.hrow .sub{margin:0}
+.hr2{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ln)}
+.hr2 .tabs{border:0}
+.hr2 .chips{margin-left:auto;padding:0 0 6px}
+.chips .rs.ask{color:#d4382c;border-color:#d4382c}
+.pg{width:794px;height:1123px;padding:28px 32px;overflow:hidden;background:#fff;box-sizing:border-box}
+.ex{--bg:#eaf0f6;--sf:#fff;--ink:#10243a;--mut:#5b6f85;--ln:#d3dde8;--ct:#1b4f9c;--ctink:#fff;--ball:#c9e500;--ballink:#1c2600;color:#10243a;font:400 14px Barlow,sans-serif}
+.exh{margin-bottom:10px}.exh h1{font-size:24px;margin:0 0 2px}
+.ex h2{font-size:18px;margin:10px 0 6px}
+.ex .quads{gap:8px}
+.ex table{min-width:0}
+.ex th,.ex td{padding:2px 8px;line-height:1.2}
+.ex th:first-child,.ex td:first-child{position:static}
+.ex td b{font-size:15px}
+.ex td small{display:inline;margin-left:6px}
+.ex thead th{font-size:14px}
+.ex tr.sec th{font-size:12px}
+.ex .kp b{font-size:28px}
+.c button{background:var(--cc,var(--ct));color:var(--cci,var(--ctink));height:28px}
+.c input{height:28px}
+.e h3{border-left:5px solid var(--cc,var(--ln))}
+.q.m .e h3{border-left:0;border-right:5px solid var(--cc,var(--ln))}
+.e.wn{--cc:#1d8a4a;--cci:#fff}
+.e.er{--cc:#c9342a;--cci:#fff}
+.r.gf{--cc:#c76a0a;--cci:#fff;background:rgba(199,106,10,.1)}
+.e.sv.off .r{opacity:.38}
+.e.sv.on{border-color:var(--ball);box-shadow:0 0 0 2px var(--ball)}
+@keyframes fl{0%{background:var(--ball);color:var(--ballink)}100%{background:var(--bg)}}
+.c input.fl,.sb .ps.fl{animation:fl .7s ease-out}
+.sb .svn,.sb .svb{font:600 12px Barlow,sans-serif;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:999px;padding:2px 8px;cursor:pointer;margin:1px}
+.sb .svb{background:var(--ball);color:var(--ballink);border-color:var(--ball)}
+.hr2{align-items:center}
+.hr2 .bk{font-size:22px;padding:0 6px;line-height:1}
+.ttl{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.ttl b{font:700 16px "Barlow Semi Condensed",sans-serif}
+.ttl small{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.hr2 .tabs button{padding:8px 12px;font-size:16px}
+.hr2 .chips{padding:0}
+.hr2 .chips button{padding:5px 10px;font-size:13px}
+.mn{position:relative}
+.mn>button{font:700 22px/1 Barlow,sans-serif;padding:4px 12px;border-radius:8px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);cursor:pointer}
+.mnl{position:absolute;right:0;top:calc(100% + 6px);z-index:20;background:var(--sf);border:1px solid var(--ln);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);padding:6px;display:grid;gap:4px;min-width:210px}
+.mnl button{text-align:left;font:500 15px Barlow,sans-serif;padding:10px 12px;border:0;background:none;color:var(--ink);border-radius:6px;cursor:pointer}
+.mnl button:hover{background:var(--bg)}
+.mnl .rs.ask{color:#d4382c;font-weight:600}
+.e.sv{--cc:#0b0b0b;--cci:#fff}
+.e.sv .c button{box-shadow:0 0 0 1px var(--ln)}
+.r.pd{background:rgba(201,229,0,.3)}
+.cols{display:grid;gap:8px;align-items:start}
+.e h3.hf{display:grid;grid-template-columns:1fr 70px 70px;gap:6px;align-items:center;padding:3px 6px 3px 8px}
+.e h3.hf i{font-style:normal;font-weight:600;font-size:11px;color:var(--mut);text-align:center}
+.q.m .e h3.hf{direction:rtl;padding:3px 8px 3px 6px}
+.q.m .e h3.hf>*{direction:ltr}
+.q.m .e h3.hf>span{text-align:right}
+@media(max-width:1000px){.e h3.hf{grid-template-columns:1fr 56px 56px;padding:3px 3px 3px 5px}}
+.quads{position:relative}
+.ub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:48px;height:48px;border-radius:50%;border:2px solid var(--sf);background:var(--ball);color:var(--ballink);font:700 26px/1 Barlow,sans-serif;padding:0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.ub:disabled{opacity:.45;cursor:default}
+.ub:active:not(:disabled){transform:translate(-50%,-50%) scale(.92)}
+.c button,.c input{height:24px}
+.c input{font-size:16px}
+@media(min-width:1001px){.r{padding:1px 6px;font-size:12px}}
+.e h3{padding:2px 8px;font-size:14px}
+.e h3.hf{padding:2px 6px 2px 8px}
+.q.m .e h3.hf{padding:2px 8px 2px 6px}
+.e h3.sh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.q.m .e h3.sh{flex-direction:row-reverse}
+.np{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500;color:var(--mut)}
+.np b{color:var(--ink);font-weight:700}
+.q{padding:3px 6px 5px;border-top-width:5px}
+.cols{gap:6px}
+.k{gap:5px}
+header{padding:6px 12px 0}
+main{padding:6px 12px}
+.quads{gap:6px}
+.hr2 .tabs button{padding:5px 12px}
+.hr2 .chips button{padding:3px 10px}
+.sb{padding:3px 10px;margin:4px 0 2px}
+.sb .gm{font-size:26px;min-width:24px}
+.sb .ps{font-size:22px;padding:2px 6px;min-width:48px}
+.c button,.c input{height:22px}
+.c input{font-size:15px}
+.r{border-top:0}
+.e .r:nth-child(even){background:rgba(127,150,175,.1)}
+.bd2{display:block}
+.e h3.h2{display:block;padding:2px 6px 2px 8px}
+.h2 .hh:last-child{display:none}
+.hh{display:grid;grid-template-columns:1fr 70px 70px;gap:6px;align-items:center}
+.hh i{font-style:normal;font-weight:600;font-size:11px;color:var(--mut);text-align:center}
+.q.m .e h3.h2,.q.m .hh,.q.m .bd2{direction:rtl}
+.q.m .hh>*{direction:ltr}
+.q.m .hh>span{text-align:right}
+@media(max-width:1000px){.hh{grid-template-columns:1fr 56px 56px}}
+@media(min-width:1500px){.e h3.h2{display:grid;grid-template-columns:1fr 1fr;column-gap:8px}.h2 .hh:last-child{display:grid}.bd2{display:grid;grid-template-columns:1fr 1fr;column-gap:8px}.bd2 .r.f,.hh{grid-template-columns:1fr 62px 62px}.bd2 .r:not(.f){grid-template-columns:1fr 64px}.bd2 .c input{width:30px}.bd2 .r:nth-child(even){background:none}.bd2 .r:nth-child(4n+3),.bd2 .r:nth-child(4n){background:rgba(127,150,175,.1)}}
+.e .r.gf{background:rgba(199,106,10,.12)}
+.e .r.pd{background:rgba(201,229,0,.3)}
+.c button,.c input{height:28px}
+.c input{font-size:16px}
+@media(min-width:1001px){.r{padding:3px 6px}}
+header,main{max-width:2200px}
+.cols>.k,.k>.e,.bd2>.r,.r>*,.c{min-width:0}
+.r>span{overflow-wrap:anywhere}
+.q{padding:3px 4px 5px}
+.cols{gap:4px}
+.r{grid-template-columns:1fr 62px;gap:4px}
+.r.f{grid-template-columns:1fr 62px 62px}
+.e h3.hf,.hh{grid-template-columns:1fr 62px 62px;gap:4px}
+.c input{width:30px}
+@media(min-width:1001px){.r{padding:3px 4px}}
+@media(max-width:1000px){.r{grid-template-columns:1fr 56px}.r.f{grid-template-columns:1fr 56px 56px}.hh,.e h3.hf{grid-template-columns:1fr 56px 56px}}
+.r sup{font-size:.7em;vertical-align:super;line-height:0}
+.hr2{display:grid;grid-template-columns:1fr auto 1fr;gap:10px}
+.hl{display:flex;align-items:center;gap:10px;min-width:0}
+.hr2 .chips{margin-left:0;justify-content:center}
+.ia{display:flex;justify-content:flex-end;gap:6px}
+.ia button{width:34px;height:30px;border-radius:8px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);font:600 17px/1 Barlow,sans-serif;cursor:pointer;padding:0}
+.ia button:disabled{opacity:.35;cursor:default}
+.ia button[aria-pressed=true]{background:var(--ct);color:var(--ctink);border-color:var(--ct)}
+.ia .rop{width:auto;padding:0 12px;font-size:14px;background:var(--ball);color:var(--ballink);border-color:var(--ball)}
+.ia button.ask{width:auto;padding:0 8px;font-size:13px;color:#d4382c;border-color:#d4382c}
+.pi{position:relative;display:inline-block;font-size:19px;line-height:1}
+.pi b{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);font:800 7px/1 Barlow,sans-serif;color:#c9342a}
+.hr2{align-items:end}
+.lst li{background:var(--sf);border:1px solid var(--ln);border-radius:10px;align-items:center;padding-right:8px}
+.lst li .it{background:none;border:0}
+.lst li .x{border:0;background:none;font-size:18px;padding:8px 10px;border-radius:8px}
+.lst li .x:hover{background:var(--bg)}
+.lst li .x.ask{border:1px solid #d4382c;font-size:13px}
+.ico{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px}
+.h2r{display:flex;align-items:center;justify-content:space-between;max-width:760px}
+.h2r .ico{padding:6px 12px;font-size:0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font:500 15px Barlow,sans-serif;z-index:50}
+.ia,.hr2 .chips{align-self:start;margin-bottom:8px}
+header{padding:12px 12px 0}
+@media(min-width:1500px){.bd2{column-gap:4px}.bd2 .r.f,.hh{grid-template-columns:1fr 56px 56px}.bd2 .r:not(.f){grid-template-columns:1fr 58px}.bd2 .c input{width:26px}}
+@media(min-width:1500px){.bd2 .r.sp{grid-column:1/-1}}
+.sb{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:6px 10px;margin:8px 0 2px}
+.sb .tm{display:flex;align-items:center;gap:10px;min-width:0}
+.sb .tm.B{flex-direction:row-reverse}
+.sb .tn{flex:1;min-width:0;font:600 14px Barlow,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb .tm.B .tn{text-align:right}
+.sb .gm{font:700 34px/1 "Barlow Semi Condensed",sans-serif;min-width:28px;text-align:center}
+.sb .ps{font:700 28px/1 "Barlow Semi Condensed",sans-serif;min-width:56px;text-align:center;background:var(--bg);border-radius:8px;padding:4px 6px}
+.sb .bl{border:0;background:none;padding:0 2px;font-size:16px;line-height:1;cursor:pointer}
+.sb .mid{text-align:center;font-size:12px;color:var(--mut);line-height:1.3}
+.sb .mid b{display:inline;margin-right:6px;font:700 16px "Barlow Semi Condensed",sans-serif;color:var(--ink)}
+.hh1{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 10px}
+.hh1 h2{margin:0}
+.ia2{display:flex;gap:8px}
+.lst2{max-width:none;grid-template-columns:repeat(2,minmax(0,1fr))}
+.lst li .it{min-width:0}
+.lst2 .it span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.l1{display:flex;align-items:baseline;min-width:0}
+.l1 b{white-space:nowrap}
+.pgr{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}
+.pgr button{padding:6px 14px;border-radius:8px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);font:600 18px/1 Barlow,sans-serif;cursor:pointer}
+.pgr button:disabled{opacity:.35;cursor:default}
+.pgr select{font:500 15px Barlow,sans-serif;padding:5px 8px;border-radius:8px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink)}
+#vs{position:fixed;right:12px;bottom:12px;width:310px;z-index:30;background:var(--sf);border:1px solid var(--ln);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.3);padding:10px;display:grid;gap:8px}
+#vs[hidden]{display:none}
+#vs .vh{display:flex;justify-content:space-between;align-items:center}
+#vs .vh button{border:0;background:none;color:var(--mut);font-size:22px;line-height:1;cursor:pointer}
+#vs .vm label{margin-right:12px;font-size:14px}
+#vs .vb{display:flex;align-items:center;gap:8px}
+#vs .vb .big{padding:8px 14px;font-size:15px}
+#vs .vb .alt{padding:8px 12px;border-radius:10px;font-size:16px;cursor:pointer}
+#vs #vgo.rec{background:#d4382c;color:#fff;animation:pl 1.2s infinite}
+@keyframes pl{50%{opacity:.6}}
+#vs .vl{font-size:13px;color:var(--mut);min-height:34px}
+#vs .vl.ok{color:#1d8a4a;font-weight:600}
+#vs .vl.bad{color:#d4382c}
+#vs #vi{font:400 14px Barlow,sans-serif;padding:8px 10px;border:1.5px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)}
+.al{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;max-width:760px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--sf);border:1px solid var(--ln);border-radius:999px;padding:4px 6px 4px 12px}
+.chip button{border:0;background:none;color:var(--mut);font-size:17px;line-height:1;cursor:pointer;padding:0 4px}
+.lg{max-width:420px;margin:30px auto;text-align:center}
+.lgb{display:grid;gap:10px;margin-top:14px}
+.pk{display:grid;gap:8px;margin-top:10px}
+.pk select,.pk input{font:400 16px Barlow,sans-serif;padding:10px 12px;border:1.5px solid var(--ln);border-radius:10px;background:var(--sf);color:var(--ink)}
+</style>
+</head>
+<body>
+<header id="hd"></header>
+<main id="app"></main>
+<dialog id="dlg"></dialog>
+
+<script>window.fbReady=new Promise(r=>{window.__fbres=r});</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInAnonymously,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,getDoc,getDocs,setDoc,deleteDoc,query,where} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const firebaseConfig={
+  apiKey:"AIzaSyAAKRb7YsSR5sNH8ZG1CkIThDAJggsKCt4",
+  authDomain:"padelstats-e4b27.firebaseapp.com",
+  projectId:"padelstats-e4b27",
+  storageBucket:"padelstats-e4b27.firebasestorage.app",
+  messagingSenderId:"161643648148",
+  appId:"1:161643648148:web:218505d0d2900114bad081"
+};
+try{
+ const app=initializeApp(firebaseConfig),auth=getAuth(app);
+ let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(app)}
+ const P=p=>p.split('/'),clone=o=>JSON.parse(JSON.stringify(o));
+ window.FBS={
+  onAuth:cb=>onAuthStateChanged(auth,cb),
+  google:()=>signInWithPopup(auth,new GoogleAuthProvider()),
+  anon:()=>signInAnonymously(auth),
+  out:()=>signOut(auth),
+  user:()=>auth.currentUser,
+  get:async path=>{const x=await getDoc(doc(db,...P(path)));return x.exists()?clone(x.data()):null},
+  list:async(col,w)=>{const x=await getDocs(w?query(collection(db,col),where(...w)):collection(db,col));return x.docs.map(d=>({...clone(d.data()),id:d.id}))},
+  set:(path,data)=>setDoc(doc(db,...P(path)),data),
+  del:path=>deleteDoc(doc(db,...P(path)))
+ };
+}catch(e){console.error('Firebase',e)}
+window.__fbres();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const FB=[['backhand','Revers'],['forehand','Coup droit']];
+const SCHEMA=[
+{k:'services',l:'Service',t:'n',i:[['first_serves_in','1er serv.'],['points_won_on_first_serve','Pts gagnés sur 1er'],['second_serves_in','2ème serv.'],['points_won_on_second_serve','Pts gagnés sur 2ème'],['aces','Aces'],['double_faults','Doubles fautes'],['breaks','Break']]},
+{k:'shots_played',l:'Coups joués',t:'f',i:[['baseline','Fond de court'],['volley','Volée'],['overhead','Smash'],['bajada','Bajada'],['return','Retour']]},
+{k:'errors',l:'Fautes',t:'f',i:[['baseline_forced','Fond – forcée'],['baseline_unforced','Fond – non forcée'],['volley_forced','Volée – forcée'],['volley_unforced','Volée – non forcée'],['overhead','Smash'],['bajada','Bajada'],['return','Retour']]},
+{k:'winners',l:'Coups gagnants',t:'f',i:[['por_4','Por 4'],['remate','Remate'],['por_3','Por 3'],['bajada','Bajada'],['volley','Volée'],['other_winner','Autre'],['shots_forcing_error','Provoque une faute']]},
+{k:'gifts',l:'Cadeaux',t:'f',i:[['gifts','Cadeaux']]}
+];
+const LBL={};
+const path=(s,i)=>s.k==='gifts'?'gifts':s.k+'.'+i;
+const zero=()=>{const o={};SCHEMA.forEach(s=>{if(s.k==='gifts'){o.gifts={forehand:0,backhand:0};FB.forEach(([f,fl])=>LBL['gifts.'+f]='Cadeaux ('+fl+')');return}o[s.k]={};s.i.forEach(([i,l,x])=>{const f2=s.t==='f'||x==='f';o[s.k][i]=f2?{forehand:0,backhand:0}:0;
+ if(f2)FB.forEach(([f,fl])=>LBL[s.k+'.'+i+'.'+f]=s.l+' · '+l+' ('+fl+')');else LBL[path(s,i)]=s.l+' · '+l})});return o};
+const mk=(id,pid,name,team,position)=>({id,pid,name,team,position,...zero()});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let DB={players:[],matches:[],invites:{}},S,M,si=0,tab='count',view='boot',cur=null,ask=null,mn=false,CS=null,hp=0,hs=20;
+const PS={p1:'right',p2:'left',p3:'left',p4:'right'};zero();DB.matches.forEach(m=>{if(!m.sets){m.roster=m.players.map(({id,pid,name,team,position})=>({id,pid,name,team,position}));m.sets=[{id:uid(),n:1,history:m.history||[],players:m.players}];delete m.players;delete m.history}
+ m.roster.forEach(r=>r.position=PS[r.id]);m.sets.forEach(s=>{s.first=s.first||{A:null,B:null};if(s.t0===undefined)s.t0=null;s.mode=s.mode||{games:6,rule:'star'};s.score=s.score||{g:[0,0],p:[0,0],tb:false,done:null,gl:[]};s.players.forEach(p=>{p.position=PS[p.id];const w=p.winners;let c=0;for(const k in w)if(typeof w[k]==='number'){w[k]={forehand:w[k],backhand:0};c=1}if(typeof p.services.breaks!=='number')p.services.breaks=0;if(c)s.history=[]})})});
+let ROLE=null,MEP=null,synced={},tmr=null,cst='local',loginMsg='',pickSel='';
+const RO=()=>ROLE!=='admin';
+const trimO=m=>{const o=JSON.parse(JSON.stringify(m,(k,v)=>k==='history'&&Array.isArray(v)?v.slice(-60):v));o.playerIds=m.roster.map(r=>r.pid);return o};
+const save=()=>{if(ROLE==='admin'){clearTimeout(tmr);tmr=setTimeout(push,600)}};
+const setSt=s=>{cst=s;if(view==='home')render()};
+const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)};
+function saveBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function push(){if(ROLE!=='admin')return;
+ const want={};DB.players.forEach(p=>want['players/'+p.id]=JSON.stringify(p));DB.matches.forEach(m=>want['matches/'+m.id]=JSON.stringify(trimO(m)));
+ const jobs=[];
+ for(const k in want)if(synced[k]!==want[k]){const v=want[k];synced[k]=v;jobs.push(FBS.set(k,JSON.parse(v)).catch(e=>{if(synced[k]===v)delete synced[k];throw e}))}
+ for(const k in synced)if(!(k in want)){delete synced[k];jobs.push(FBS.del(k))}
+ if(!jobs.length)return;setSt('sync');Promise.all(jobs).then(()=>setSt('ok')).catch(e=>{console.error(e);setSt('err')})}
+async function loadAdmin(){const [pl,ma,iv]=await Promise.all([FBS.list('players'),FBS.list('matches'),FBS.list('invites')]);
+ DB.players=pl.sort((a,b)=>a.name.localeCompare(b.name,'fr'));DB.matches=ma.map(m=>{delete m.playerIds;return m});DB.invites={};iv.forEach(i=>DB.invites[i.id]=i.code);
+ synced={};DB.players.forEach(p=>synced['players/'+p.id]=JSON.stringify(p));DB.matches.forEach(m=>synced['matches/'+m.id]=JSON.stringify(trimO(m)));cst='ok'}
+async function loadGuest(){DB.players=await FBS.list('players');DB.matches=await FBS.list('matches',['playerIds','array-contains',MEP]);cst='ok'}
+async function boot(){
+ view='boot';render();await window.fbReady;
+ if(!window.FBS){loginMsg='Firebase indisponible : vérifie la connexion internet.';view='login';render();return}
+ FBS.onAuth(async u=>{try{
+  if(!u){ROLE=null;MEP=null;DB={players:[],matches:[],invites:{}};M=S=null;view='login';render();return}
+  if(!u.isAnonymous){
+   let ok=true;try{await FBS.get('invites/__ping')}catch(e){ok=false}
+   if(!ok){loginMsg='Ce compte Google n’est pas autorisé comme admin.';await FBS.out();return}
+   ROLE='admin';await loadAdmin();loginMsg='';view='home';render();return}
+  const c=await FBS.get('claims/'+u.uid).catch(()=>null);
+  if(c&&c.playerId){ROLE='guest';MEP=c.playerId;await loadGuest();loginMsg='';view='home';render()}
+  else{ROLE=null;DB.players=await FBS.list('players').catch(()=>[]);view='pick';render()}
+ }catch(e){console.error(e);loginMsg='Erreur de connexion : '+(e.code||e.message);view='login';render()}})}
+async function claim(){const pid=document.getElementById('pp').value,code=document.getElementById('pc').value.trim().toUpperCase(),u=FBS.user();pickSel=pid;
+ if(!pid||!code){loginMsg='Choisis ton profil et saisis le code.';render();return}
+ try{await FBS.set('claims/'+u.uid,{playerId:pid,code});ROLE='guest';MEP=pid;await loadGuest();loginMsg='';view='home';render()}
+ catch(e){loginMsg=e.code==='permission-denied'?'Code incorrect pour ce profil.':'Erreur : '+(e.code||e.message);render()}}
+async function reloadData(){try{if(ROLE==='admin'){if(cst==='sync'){toast('Synchronisation en cours…');return}await loadAdmin()}else await loadGuest();M=S=null;render();toast('Données actualisées')}catch(e){toast('Actualisation impossible')}}
+const genCode=()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];return c};
+async function newCode(){const code=genCode();try{await FBS.set('invites/'+cur,{code});DB.invites[cur]=code;render()}catch(e){toast('Impossible de créer le code')}}
+async function revoke(){try{const cl=await FBS.list('claims',['playerId','==',cur]);await Promise.all(cl.map(c=>FBS.del('claims/'+c.id)));toast(cl.length?cl.length+' connexion(s) révoquée(s)':'Aucune connexion à révoquer')}catch(e){toast('Révocation impossible')}}
+const renderBoot=()=>'<p class="mut">Connexion…</p>';
+const renderLogin=()=>`<div class="lg"><p class="mut">Connecte-toi pour accéder aux analyses.</p>${loginMsg?`<p class="err">${esc(loginMsg)}</p>`:''}<div class="lgb"><button class="big" data-act="glogin">Connexion admin (Google)</button><button class="big alt" data-act="alogin">Je suis un joueur</button></div></div>`;
+const renderPick=()=>`<div class="lg"><h2>Qui es-tu ?</h2><p class="mut">Choisis ton profil et saisis le code d’accès donné par l’admin.</p>${loginMsg?`<p class="err">${esc(loginMsg)}</p>`:''}<div class="pk"><select id="pp"><option value="">Choisir mon profil…</option>${DB.players.map(p=>`<option value="${esc(p.id)}"${p.id===pickSel?' selected':''}>${esc(p.name)}</option>`).join('')}</select><input id="pc" placeholder="Code d’accès" autocomplete="off" autocapitalize="characters" maxlength="12"></div><div class="lgb"><button class="big" data-act="claim">Se connecter</button><button class="big alt" data-act="logout">Retour</button></div></div>`;
+function exportMatch(id){const m=DB.matches.find(x=>x.id===id);if(!m)return;saveBlob(`padel-analyse-${m.date}.json`,new Blob([JSON.stringify({format:'padel-analysis',v:1,match:m},null,1)],{type:'application/json'}))}
+async function importMatch(f){if(!f)return;try{
+ const m=JSON.parse(await f.text()).match;
+ if(!m||!Array.isArray(m.roster)||m.roster.length!==4||!Array.isArray(m.sets)||!m.sets.length||!m.sets.every(s=>s.score&&s.mode&&Array.isArray(s.players)))throw 0;
+ m.id=uid();m.roster.forEach(r=>{let p=DB.players.find(x=>x.name.toLowerCase()===String(r.name).toLowerCase());if(!p){p={id:uid(),name:String(r.name)};DB.players.push(p)}r.pid=p.id});
+ DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));
+ m.sets.forEach(s=>{s.id=uid();s.history=s.history||[];s.first=s.first||{A:null,B:null};if(s.t0===undefined)s.t0=null;s.players.forEach(p=>{const r=m.roster.find(x=>x.id===p.id);if(r)p.pid=r.pid})});
+ DB.matches.push(m);save();render();toast('Analyse importée')}catch(e){toast('Fichier invalide : import impossible')}}
+document.addEventListener('change',e=>{if(e.target.id==='imp'){[...e.target.files].forEach(f=>importMatch(f));e.target.value=''}if(e.target.id==='ps'){hs=+e.target.value;hp=0;render()}});
+const ref=(p,pa)=>{const k=pa.split('.');const last=k.pop();return [k.reduce((o,x)=>o[x],p),last]};
+const get=(p,pa)=>{const [o,k]=ref(p,pa);return o[k]};
+const bump=(pid,pa,d)=>{const p=S.players.find(x=>x.id===pid);const [o,k]=ref(p,pa);if(o[k]+d<0)return false;o[k]+=d;return true};
+const ctr=(pid,pa,v)=>`<div class="ctr"><button data-p="${pid}" data-a="${pa}" data-d="-1" aria-label="Retirer">−</button><b>${v}</b><button class="p" data-p="${pid}" data-a="${pa}" data-d="1" aria-label="Ajouter">+</button></div>`;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const total=(p,s)=>s.i.reduce((n,[i])=>{const v=s.k==='gifts'?p.gifts:p[s.k][i];return n+(typeof v==='object'?v.forehand+v.backhand:v)},0);
+const mini=(pid,pa,v)=>`<span class="c"><input class="v" type="number" min="0" inputmode="numeric" value="${v}" data-p="${pid}" data-a="${pa}" aria-label="Valeur"><button class="p" data-p="${pid}" data-a="${pa}" data-d="1" aria-label="Ajouter">+</button></span>`;
+const rows=(p,s,hd)=>((s.t==='f'||s.i[0][2]==='f')&&hd?`<div class="r f hd"><span></span><i>CD</i><i>Rev</i></div>`:'')+s.i.filter(x=>x[0]!=='breaks').map(([i,l0,x],_,__,l=SH2[s.k+'.'+i]||l0)=>s.t==='f'||x==='f'?`<div class="r f${s.k==='gifts'?' gf':''}${i==='shots_forcing_error'?' sp':''}"><span>${l}</span>${FB.map(([f])=>{const pa=s.k==='gifts'?'gifts.'+f:s.k+'.'+i+'.'+f;return mini(p.id,pa,get(p,pa))}).join('')}</div>`:`<div class="r${S.pend&&S.pend.pid===p.id&&S.pend.k===i?' pd':''}"><span>${l}</span>${mini(p.id,path(s,i),get(p,path(s,i)))}</div>`).join('');
+const CAT={services:'sv',shots_played:'sp',errors:'er',winners:'wn'};
+const TW={services:1,shots_played:1,winners:1,errors:1};
+const SH2={'services.first_serves_in':'1<sup>er</sup> serv.','services.second_serves_in':'2<sup>ème</sup> serv.','services.points_won_on_first_serve':'Pts gagnés sur 1<sup>er</sup>','services.points_won_on_second_serve':'Pts gagnés sur 2<sup>ème</sup>','shots_played.baseline':'Fond','errors.baseline_forced':'Fond F','errors.baseline_unforced':'Fond NF','errors.volley_forced':'Volée F','errors.volley_unforced':'Volée NF'};
+const enc=(p,t,ks,x='')=>{const k=ks[0],tw=TW[k],hd=SCHEMA.find(s=>s.k===k).t==='f'?(tw?`<h3 class="h2"><div class="hh"><span>${t}</span><i>Rev</i><i>CD</i></div><div class="hh"><span></span><i>Rev</i><i>CD</i></div></h3>`:`<h3 class="hf"><span>${t}</span><i>Rev</i><i>CD</i></h3>`):`<h3 class="sh">${t}</h3>`,bd=ks.map(q=>rows(p,SCHEMA.find(s=>s.k===q),0)).join('');return `<div class="e ${CAT[k]} ${x}">${hd}${tw?`<div class="bd2">${bd}</div>`:bd}</div>`};
+const ENC={S:p=>enc(p,'Service<span class="np"><b>'+esc(p.name)+'</b> · Éq. '+p.team+' · '+(p.position==='left'?'gauche':'droite')+'</span>',['services'],CS?CS.id===p.id?'on':'off':''),W:p=>enc(p,'Gagnants',['winners']),F:p=>enc(p,'Fautes',['errors','gifts']),J:p=>enc(p,'Joués',['shots_played'])};
+const CELL=[[['WS','FJ'],50,0],[['SW','JF'],50,0],[['FJ','WS'],50,0],[['JF','SW'],50,0]];
+const order=()=>{const P=S.players;return S.flip?[P[2],P[1],P[3],P[0]]:[P[1],P[2],P[0],P[3]]};
+const quad=(p,i,_,[lo,w,m]=CELL[i])=>`<section class="q ${p.team}${m?' m':''}"><div class="cols" style="grid-template-columns:${w}fr ${100-w}fr">${lo.map(c=>`<div class="k">${[...c].map(l=>ENC[l](p)).join('')}</div>`).join('')}</div></section>`;
+function renderCount(){CS=srv();return `<div class="quads">${order().map(quad).join('')}<button id="undo" class="ub" aria-label="Annuler le dernier clic">↶</button></div>`}
+function renderStats(){
+ const P=S.players;
+ const cell=(vals,main,sub)=>{const m=Math.max(...vals.map(main));return vals.map(v=>`<td class="${main(v)===m&&m>0?'top':''}"><b>${main(v)}</b>${sub?`<small>${sub(v)}</small>`:''}</td>`).join('')};
+ let h=`<div class="wrap"><table><thead><tr><th></th>${P.map(p=>`<th class="${p.team}">${esc(p.name)}</th>`).join('')}</tr></thead><tbody>`;
+ SCHEMA.forEach(s=>{h+=`<tr class="sec"><th colspan="5">${s.l}</th></tr>`;
+  s.i.forEach(([i,l,x])=>{h+=`<tr><td>${l}</td>`;
+   if(s.t==='f'||x==='f')h+=cell(P.map(p=>s.k==='gifts'?p.gifts:p[s.k][i]),v=>v.forehand+v.backhand,v=>`Rev ${v.backhand} · CD ${v.forehand}`);
+   else h+=cell(P,p=>get(p,path(s,i)));
+   h+='</tr>'})});
+ const W=SCHEMA[3],E=SCHEMA[2],Sv=SCHEMA[0];
+ const pct=(a,b)=>b?Math.round(100*a/b):0;
+ h+=`<tr class="sec"><th colspan="5">Bilan</th></tr>`;
+ h+=`<tr><td>Total coups gagnants</td>${cell(P,p=>total(p,W))}</tr>`;
+ h+=`<tr><td>Total fautes</td>${cell(P,p=>total(p,E))}</tr>`;
+ h+=`<tr><td>Ratio gagnants / (fautes + cadeaux)</td>${cell(P,p=>{const e=total(p,E)+total(p,SCHEMA[4]);return e?Math.round(100*total(p,W)/e)/100:total(p,W)})}</tr>`;
+ h+=`<tr><td>% points gagnés sur 1er service</td>${cell(P,p=>pct(p.services.points_won_on_first_serve,p.services.first_serves_in))}</tr>`;
+ h+=`<tr><td>% points gagnés sur 2e service</td>${cell(P,p=>pct(p.services.points_won_on_second_serve,p.services.second_serves_in))}</tr>`;
+ h+=`</tbody></table></div>`;
+ return h}
+const RL={punto:'Punto',star:'Star Point',avantage:'Avantage'};
+const modeHtml=()=>{const d=(S&&S.mode)||{games:6,rule:'star'};return `<label>Nombre de jeux<select id="mg">${[6,7,8,9].map(n=>`<option value="${n}"${n===d.games?' selected':''}>${n} jeux · tie-break à ${n}-${n}</option>`).join('')}</select></label><label>Règle à 40-40<select id="mr">${[['punto','Punto : le point décisif donne le jeu'],['star','Star Point : AV1, AV2, puis point décisif'],['avantage','Avantage : 2 points d’écart']].map(([k,l])=>`<option value="${k}"${k===d.rule?' selected':''}>${l}</option>`).join('')}</select></label>`};
+const readMode=()=>({games:+document.getElementById('mg').value,rule:document.getElementById('mr').value});
+const newSet=(m,n,mode)=>({id:uid(),n,mode,history:[],first:{A:null,B:null},t0:null,score:{g:[0,0],p:[0,0],tb:false,done:null,gl:[]},players:m.roster.map(r=>mk(r.id,r.pid,r.name,r.team,r.position))});
+const PN=['0','15','30','40'];
+function pts(sc,rule){const [a,b]=sc.p;if(sc.tb)return [a,b];if(a<3||b<3)return [PN[Math.min(a,3)],PN[Math.min(b,3)]];
+ const d=a-b,r=['40','40'];if(d===0)return rule==='star'&&a>=5?['SP','SP']:r;
+ r[d>0?0:1]='AV'+(rule==='star'?Math.max(a,b)-3:'');return r}
+function pt(t){const sc=S.score,sv=sc.tb?null:srv();let brk=null;
+ const p=sc.p,r=S.mode.rule,G=S.mode.games;p[t]++;(sc.pw=sc.pw||[0,0])[t]++;const a=p[t],b=p[1-t];let w,c;
+ if(sc.tb){w=a>=7&&a-b>=2;c='Tie-break'}
+ else{w=r==='punto'?a>=4:r==='star'?(a>=4&&a-b>=2)||a>=6:a>=4&&a-b>=2;
+  c=b<=2&&a===4?['40-0','40-15','40-30'][b]:r==='star'&&a>=6?'Star point':r==='punto'?'Punto':'Avantage'}
+ if(w){if(sv&&sv.team!=='AB'[t]){bump(sv.id,'services.breaks',1);brk=sv.id}sc.g[t]++;sc.gl.push({w:t,c});sc.p=[0,0];const g=sc.g;
+  if(sc.tb||(g[t]>=G&&g[t]-g[1-t]>=2))sc.done=t;else if(g[0]===G&&g[1]===G)sc.tb=true}
+ return brk}
+const SH={errors:{return:'return',baseline_unforced:'baseline',baseline_forced:'baseline',volley_unforced:'volley',volley_forced:'volley',overhead:'overhead',bajada:'bajada'},winners:{volley:'volley',por_3:'overhead',por_4:'overhead',remate:'overhead',bajada:'bajada',other_winner:'baseline'}};
+function shotOf(a){const k=a.split('.'),s=SH[k[0]]&&SH[k[0]][k[1]];return s?'shots_played.'+s+'.'+k[2]:null}
+function ptFor(pid,a){const p=S.players.find(x=>x.id===pid),t=p.team==='A'?0:1,k=a.split('.');
+ if(k[0]==='errors'||a==='services.double_faults')return 1-t;
+ if((k[0]==='winners'&&k[1]!=='shots_forcing_error')||a==='services.aces')return t;
+ return null}
+function srv(){const sc=S.score;if(sc.done!==null||S.t0==null)return null;const gc=sc.g[0]+sc.g[1],TL=['A','B'];
+ const who=x=>{const f=S.first[TL[(S.t0+x)%2]];if(!f)return null;const fp=S.players.find(p=>p.id===f);return Math.floor(x/2)%2?S.players.find(p=>p.team===fp.team&&p.id!==f):fp};
+ if(!sc.tb)return who(gc);
+ const s0=who(gc),o0=who(gc+1);if(!s0||!o0)return null;
+ const pr=q=>S.players.find(p=>p.team===q.team&&p.id!==q.id),seq=[s0,o0,pr(s0),pr(o0)];
+ return seq[Math.floor((sc.p[0]+sc.p[1]+1)/2)%4]}
+function setServer(id){const gc=S.score.g[0]+S.score.g[1],p=S.players.find(x=>x.id===id),pa=S.players.find(x=>x.team===p.team&&x.id!==id),ct=p.team==='A'?0:1;
+ S.t0=((ct-gc)%2+2)%2;S.first[p.team]=Math.floor(gc/2)%2?pa.id:p.id}
+function svHtml(){const sc=S.score,sv=srv();
+ const gc=sc.g[0]+sc.g[1],c=S.ch||S.t0==null?S.players:S.players.filter(p=>p.team===['A','B'][(S.t0+gc)%2]);
+ return `<span>Qui sert ?</span> ${c.map(p=>`<button class="svb" data-sv="${p.id}">${esc(p.name.split(' ')[0])}</button>`).join('')}`}
+function banner(act){const sc=S.score,[pa,pb]=pts(sc,S.mode.rule),T=['A','B'],sv=srv(),pr=sc.done===null&&!(sv&&!S.ch)?svHtml():'';
+ const nm=t=>S.players.filter(p=>p.team===T[t]).map(p=>(sv&&sv.id===p.id?'<button class="bl" data-svc="1" aria-label="Changer le serveur">🎾</button> ':'')+esc(p.name)).join(' / ');
+ const tm=(t,x)=>`<div class="tm ${T[t]}"><span class="tn">${nm(t)}</span><span class="gm">${sc.g[t]}</span><span class="ps">${x}</span></div>`;
+ return `<div class="sb">${tm(0,pa)}<div class="mid"><b>Set ${S.n}</b>${S.mode.games} jeux · ${RL[S.mode.rule]}${sc.done!==null?'<br>Set gagné par l’équipe '+T[sc.done]+(M.closed||RO()?'':' <button class="svb" data-act="endset">Suite</button>'):(sc.tb?'<br>Tie-break':'')+(pr?'<br>'+pr:'')}</div>${tm(1,pb)}</div>`}
+async function exportPdf(){
+ const b=document.querySelector('[data-act="export"]');
+ b.textContent='…';b.disabled=true;
+ const keep=S,box=document.createElement('div');box.style.cssText='position:absolute;left:-10000px;top:0';document.body.appendChild(box);
+ try{const pages=[];
+  M.sets.forEach(s=>{S=s;const h=`<div class="exh"><h1>${fmt(M.date)}</h1><div>${esc(mtitle(M))}</div><div class="mut">Set ${s.n} · ${s.mode.games} jeux · ${RL[s.mode.rule]} · score ${s.score.g.join('-')}</div></div>`;
+   pages.push(`<div class="pg ex">${h}${renderOver()}</div>`,`<div class="pg ex">${h}<h2>Statistiques détaillées</h2>${renderStats()}</div>`)});
+  S=keep;box.innerHTML=pages.join('');
+  const pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4'}),W=pdf.internal.pageSize.getWidth(),H=pdf.internal.pageSize.getHeight(),els=[...box.children];
+  for(let i=0;i<els.length;i++){const c=await html2canvas(els[i],{scale:2,backgroundColor:'#ffffff'});if(i)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,W,H)}
+  saveBlob(`padel-${M.date}.pdf`,pdf.output('blob'));b.innerHTML='<span class="pi">📄<b>PDF</b></span>'}
+ catch(e){b.innerHTML=e&&e.code==='declined'?'<span class="pi">📄<b>PDF</b></span>':'✕'}
+ finally{S=keep;box.remove();b.disabled=false}}
+function hit(pid,a){const d=1;if(!bump(pid,a,d))return false;const e={pid,a,d,pp:JSON.stringify(S.pend||null)},T=d>0&&S.score.done===null?ptFor(pid,a):null,a2=d>0?shotOf(a):null;if(a2){bump(pid,a2,d);e.a2=a2}if(T!==null){e.snap=JSON.stringify(S.score);e.lbl=S.players.find(p=>p.id===pid).name+' · '+LBL[a]+' +1 · point équipe '+'AB'[T];const sv0=srv(),br=pt(T);if(br)e.brk=br;const P=S.pend;if(P){const sv=S.players.find(x=>x.id===P.pid);if('AB'.indexOf(sv.team)===T){const pa='services.points_won_on_'+(P.k==='first_serves_in'?'first':'second')+'_serve';bump(P.pid,pa,1);e.pw=[P.pid,pa]}}if(a.indexOf('errors.return.')===0){const sv=P?S.players.find(x=>x.id===P.pid):sv0,rt=S.players.find(x=>x.id===pid);if(sv&&rt&&sv.team!==rt.team){bump(sv.id,'services.aces',1);e.ace=sv.id}}S.pend=null}else if(d>0&&(a==='services.first_serves_in'||a==='services.second_serves_in'))S.pend={pid,k:a.split('.')[1]};S.history.push(e);save();render();if(T!==null&&S.score.done!==null)endSetDlg();[a,a2].filter(Boolean).forEach(x=>{const el=document.querySelector(`input.v[data-p="${pid}"][data-a="${x}"]`);if(el)el.classList.add('fl')});if(T!==null){const el=document.querySelectorAll('.sb .ps')[T];if(el)el.classList.add('fl')};return true}
+let rec=null,vOn=false,vWant=false,vOpen=false,vTs=0,vTxt='';
+const vnorm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const lev=(a,b)=>{const m=[...Array(a.length+1)].map((_,i)=>[i]);for(let j=1;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]};
+const VSTOP=new Set('volee volees volet volley fond fonds retour retours smash smatch bajada bajadas remate remates por droit droite revers rev cd gagnant gagnants winner faute fautes ace aces cadeau cadeaux service serv premier premiere deuxieme seconde second double joue joues par de du court coup coups non forcee forcees nf provoque provoquant autre le la les un une et sur trois quatre tres cuatro joueur'.split(' '));
+function vplayer(toks){const P=S.players;
+ for(let i=0;i<toks.length-1;i++)if(toks[i]==='joueur'){const n={un:1,une:1,deux:2,trois:3,quatre:4}[toks[i+1]]||+toks[i+1];if(n>=1&&n<=4)return P[n-1]}
+ let best=null,bd=9;
+ toks.forEach(t=>{if(VSTOP.has(t)||/^\d+$/.test(t))return;P.forEach(p=>vnorm(p.name).split(' ').forEach(w=>{if(w.length<2)return;const d=lev(t,w),lim=w.length>=7?2:w.length>=4?1:0;if(d<=lim&&d<bd){bd=d;best=p}}))});
+ P.forEach(p=>{const pl=DB.players.find(x=>x.id===p.pid);((pl&&pl.alias)||[]).forEach(al=>{const aw=vnorm(al).split(' ').filter(Boolean);if(!aw.length)return;for(let i=0;i+aw.length<=toks.length;i++){let d=0,ok=true;aw.forEach((w,k)=>{const dd=lev(toks[i+k],w),lim=w.length>=7?2:w.length>=4?1:0;if(dd>lim)ok=false;else d+=dd});if(ok&&d<bd){bd=d;best=p}}})});
+ return best}
+function vparse(text){
+ const toks=vnorm(text).split(' ').filter(Boolean),has=(...w)=>w.some(x=>toks.includes(x));
+ const pl=vplayer(toks);if(!pl)return{err:'joueur non reconnu'};
+ const hand=has('revers','rev','reve','reverse')?'backhand':has('droit','droite','cd','codroit')?'forehand':null;
+ const vol=has('volee','volees','volet','volley'),fond=has('fond','fonds'),ret=has('retour','retours'),smash=has('smash','smatch','smache'),baj=has('bajada','bajadas','bajara','bahada'),rem=has('remate','remates','rematte'),
+  p3=has('por')&&has('3','trois','tres'),p4=has('por')&&has('4','quatre','cuatro'),prov=has('provoque','provoquant','provoquee','provoques');
+ const forced=has('forcee','forcees')&&!has('non','nf');
+ const mk=(a,needH=true)=>needH&&!hand?{err:'coup droit ou revers ?'}:{pid:pl.id,a:needH?a+'.'+hand:a};
+ if(has('double')&&has('faute','fautes'))return mk('services.double_faults',false);
+ if(has('ace','aces'))return mk('services.aces',false);
+ if(has('service','serv','premier','premiere','1er','1ere','deuxieme','2eme','2e','seconde','second')){
+  const one=has('premier','premiere','1er','1ere'),two=has('deuxieme','2eme','2e','seconde','second');
+  return one===two?{err:'premier ou deuxième service ?'}:mk('services.'+(one?'first':'second')+'_serves_in',false)}
+ if(has('cadeau','cadeaux'))return mk('gifts');
+ if(has('gagnant','gagnants','winner')||rem||p3||p4||prov){
+  const t=prov?'shots_forcing_error':(rem||smash)?'remate':p3?'por_3':p4?'por_4':vol?'volley':baj?'bajada':(fond||has('autre'))?'other_winner':null;
+  return t?mk('winners.'+t):{err:'type de gagnant ?'}}
+ if(has('faute','fautes')){
+  if(fond)return mk('errors.baseline_'+(forced?'forced':'unforced'));
+  if(vol)return mk('errors.volley_'+(forced?'forced':'unforced'));
+  if(smash)return mk('errors.overhead');if(baj)return mk('errors.bajada');if(ret)return mk('errors.return');
+  return{err:'type de faute ?'}}
+ const t=vol?'volley':fond?'baseline':ret?'return':smash?'overhead':baj?'bajada':null;
+ return t?mk('shots_played.'+t):{err:'coup non reconnu'}}
+const vFree=()=>{const r=document.querySelector('input[name=vmode]:checked');return !!r&&r.value==='free'};
+function vsay(m,c){const l=document.getElementById('vlast');if(l){l.textContent=m;l.className='vl '+(c||'')}}
+function vui(){const g=document.getElementById('vgo'),st=document.getElementById('vst');if(!g)return;g.textContent=vWant?'Arrêter':'Écouter';g.classList.toggle('rec',vOn);st.textContent=vOn?(vFree()?'Écoute libre…':'Je t’écoute…'):'Prêt'}
+function voiceHandle(alts){let r=null,txt=alts[0];
+ for(const a of alts){const x=vparse(a);if(x.pid){r=x;txt=a;break}if(!r)r=x}
+ const now=Date.now();if(alts[0]===vTxt&&now-vTs<1500)return;vTxt=alts[0];vTs=now;
+ if(!r.pid){if(!(vWant&&vFree()&&r.err==='joueur non reconnu'))vsay('« '+alts[0]+' » → '+r.err,'bad');return}
+ if(!(view==='match'&&M&&!M.closed&&tab==='count')){vsay('Ouvre l’onglet Compter','bad');return}
+ vsay(hit(r.pid,r.a)?'✓ « '+txt+' » → '+S.players.find(p=>p.id===r.pid).name+' · '+LBL[r.a]:'Impossible d’ajouter','ok')}
+function voiceStart(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){vsay('Reconnaissance vocale indisponible dans ce navigateur : utilise le champ ci-dessous (dictée du clavier).','bad');return}
+ vWant=true;rec=new SR();rec.lang='fr-FR';rec.continuous=vFree();rec.interimResults=false;rec.maxAlternatives=4;
+ rec.onstart=()=>{vOn=true;vui()};
+ rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)voiceHandle([...e.results[i]].map(a=>a.transcript))};
+ rec.onerror=e=>{const m={'not-allowed':'Micro refusé ou indisponible dans cette fenêtre','service-not-allowed':'Micro refusé ou indisponible dans cette fenêtre','network':'Reconnaissance vocale bloquée ou hors ligne','audio-capture':'Aucun micro détecté'}[e.error];if(m){vWant=false;vsay(m+' : utilise le champ ci-dessous (dictée du clavier).','bad')}};
+ rec.onend=()=>{vOn=false;if(vWant&&vFree())setTimeout(()=>{if(vWant)voiceStart()},250);else vWant=false;vui()};
+ try{rec.start()}catch(e){}}
+function voiceStop(){vWant=false;try{rec&&rec.stop()}catch(e){}vOn=false;vui()}
+function voiceToggle(){vOpen=!vOpen;if(vOpen)vbuild();else voiceStop();render()}
+function vsync(){const ok=view==='match'&&M&&!M.closed&&tab==='count',el=document.getElementById('vs');if(!ok){if(vWant||vOn)voiceStop();vOpen=false;if(el)el.hidden=true;return}if(el)el.hidden=!vOpen}
+function vbuild(){if(document.getElementById('vs'))return;const d=document.createElement('div');d.id='vs';d.hidden=true;
+ d.innerHTML='<div class="vh"><b>🎤 Commande vocale</b><button data-v="x" aria-label="Fermer">×</button></div><div class="vm"><label><input type="radio" name="vmode" value="one" checked> Une phrase</label><label><input type="radio" name="vmode" value="free"> Écoute libre</label></div><div class="vb"><button class="big" id="vgo" data-v="go">Écouter</button><button class="alt" data-v="undo" title="Annuler le dernier ajout" aria-label="Annuler">↶</button><span id="vst">Prêt</span></div><div id="vlast" class="vl">Ex. : « volée revers Thomas », « gagnant Thomas remate coup droit », « faute Thomas fond non forcée revers », « ace Thomas ».</div><input id="vi" placeholder="Ou écris / dicte ici, puis Entrée" autocomplete="off">';
+ d.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;const k=b.dataset.v;if(k==='go'){vWant?voiceStop():voiceStart()}else if(k==='x')voiceToggle();else if(k==='undo'){const u=document.getElementById('undo');if(u)u.click()}});
+ d.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'&&e.target.id==='vi'&&e.target.value.trim()){voiceHandle([e.target.value]);e.target.value=''}});
+ d.addEventListener('change',e=>{e.stopPropagation();if(e.target.name==='vmode'&&vWant)voiceStop()});
+ document.body.appendChild(d)}
+function endSetDlg(){const d=document.getElementById('dlg'),sc=S.score,T=['A','B'],w=sc.done;if(w===null||w===undefined)return;
+ const nm=S.players.filter(p=>p.team===T[w]).map(p=>esc(p.name)).join(' / '),tb=sc.gl.length&&sc.gl[sc.gl.length-1].c==='Tie-break';
+ d.innerHTML=`<h2>Set ${S.n} terminé</h2><p><b>${nm}</b> (équipe ${T[w]}) remporte le set <b>${sc.g[0]}-${sc.g[1]}</b>${tb?' après le tie-break':''}.</p><div class="dact"><button class="alt" data-close>Fermer</button><button class="alt" data-act="close-match">Clore le match</button><button class="big" data-act="newset">Nouveau set</button></div>`;
+ if(d.open)d.close();d.showModal()}
+function openSet(){const d=document.getElementById('dlg');if(!M)return;if(d.open)d.close();d.innerHTML=`<h2>Nouveau set</h2><p class="mut">Les statistiques de ce set sont indépendantes des sets précédents.</p>${modeHtml()}<div class="dact"><button class="alt" data-close>Annuler</button><button class="big" data-act="mkset">Créer le set</button></div>`;d.showModal()}
+function mkset(){const dl=document.getElementById('dlg');try{if(!M)throw new Error('analyse introuvable, rouvre-la depuis l\u2019accueil');const s=newSet(M,M.sets.length+1,readMode());M.sets.push(s);si=M.sets.length-1;S=s;tab='count';save();dl.close();render()}catch(e){dl.close();toast('Cr\u00e9ation du set impossible : '+(e&&e.message||'erreur'));render()}}
+function renderOver(){
+ const P=S.players,SP=SCHEMA[1],W=SCHEMA[3],E=SCHEMA[2],G=SCHEMA[4],tm={};
+ P.forEach(p=>tm[p.team]=(tm[p.team]||0)+total(p,SP));
+ return `<div class="quads">${order().map(p=>{
+  const sh=total(p,SP),pc=tm[p.team]?Math.round(100*sh/tm[p.team]):0,w=total(p,W),er=total(p,E),gf=total(p,G),bad=er+gf;
+  const r=bad?(w/bad).toFixed(2).replace('.',','):(w?'∞':'—'),good=bad?w/bad>1:w>0;
+  return `<section class="q ${p.team}"><div class="ch"><span class="nm">${esc(p.name)}</span><span class="pos">Équipe ${p.team}</span></div><div class="kp"><div class="wide"><span>Balles jouées dans son équipe</span><b>${pc} %</b><div class="bar2"><i style="width:${pc}%"></i></div><span>${sh} coup${sh>1?'s':''} sur ${tm[p.team]}</span></div><div class="wide"><span>Ratio gagnants / (fautes + cadeaux)</span><b class="${good?'good':''}">${r}</b><span>${w} gagnants · ${er} fautes · ${gf} cadeaux</span></div><div><span>Services gagnants</span><b>${p.services.aces}</b></div><div><span>Breaks subis</span><b>${p.services.breaks}</b></div></div></section>`}).join('')}</div>`+gamesTable()}
+function gamesTable(){const gl=S.score.gl,C=['40-0','40-15','40-30'],T=['A','B'],pw=S.score.pw||[0,0];
+ const n=(t,c)=>gl.filter(x=>x.w===t&&(c?x.c===c:!C.includes(x.c)&&x.c!=='Tie-break')).length,nm=t=>S.players.filter(p=>p.team===T[t]).map(p=>esc(p.name)).join(' / ');
+ return `<h2>Points et jeux gagnés par équipe</h2><div class="wrap"><table><thead><tr><th></th><th class="A">${nm(0)}</th><th class="B">${nm(1)}</th></tr></thead><tbody><tr><td>Points gagnés</td><td><b>${pw[0]}</b></td><td><b>${pw[1]}</b></td></tr><tr><td>Jeux gagnés</td><td><b>${S.score.g[0]}</b></td><td><b>${S.score.g[1]}</b></td></tr>${C.map(c=>`<tr><td>${c}</td><td><b>${n(0,c)}</b></td><td><b>${n(1,c)}</b></td></tr>`).join('')}<tr><td>${RL[S.mode.rule]}</td><td><b>${n(0)}</b></td><td><b>${n(1)}</b></td></tr></tbody></table></div>`}
+const fmtS=d=>{try{return new Date(d+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}catch(e){return d}};
+const fmt=d=>{try{const r=new Date(d+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});return r.charAt(0).toUpperCase()+r.slice(1)}catch(e){return d}};
+const mtitle=m=>m.roster.slice(0,2).map(p=>p.name).join(' / ')+' vs '+m.roster.slice(2).map(p=>p.name).join(' / ');
+const askb=(c,id)=>`<button class="x${ask===id?' ask':''}" data-${c}="${id}" aria-label="Supprimer">${ask===id?'Supprimer ?':'🗑'}</button>`;
+const IPL='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+const renderHome=mt=>{const pc=Math.max(1,Math.ceil(mt.length/hs));hp=Math.min(hp,pc-1);const pgm=mt.slice(hp*hs,hp*hs+hs);
+ const row=m=>`<li><button class="it" data-open="${m.id}"><div class="l1"><b>${fmt(m.date)}</b><span>&nbsp;: ${m.sets.map(s=>s.score.g.join('-')).join(' \u00b7 ')}</span></div><span>${esc(mtitle(m))}</span></button>${RO()?'':`<button class="x" data-exp="${m.id}" title="Exporter l\u2019analyse (fichier JSON)" aria-label="Exporter l\u2019analyse">${IPL}<path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>${askb('del',m.id)}`}</li>`;
+ return `<div class="hh1"><h2>${RO()?'Mes analyses':'Analyse de match'}${cst==='err'?'<span title="Sauvegarde dans le compte impossible : enregistrement Firebase refusé ou impossible"> \u26a0</span>':''}</h2><div class="ia2">${RO()?'':`<button class="big ico" data-act="new" title="Nouvelle analyse" aria-label="Nouvelle analyse">${IPL}<path d="M12 5v14M5 12h14"/></svg></button><button class="big alt ico" data-act="imp" title="Importer une analyse" aria-label="Importer une analyse">${IPL}<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></button><input type="file" id="imp" accept=".json,application/json" multiple hidden><button class="big alt ico" data-go="players" title="Profil : liste des joueurs" aria-label="Liste des joueurs">${IPL}<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></button>`}<button class="big alt ico" data-act="reload" title="Actualiser" aria-label="Actualiser">${IPL}<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button><button class="big alt ico" data-act="logout" title="Se déconnecter" aria-label="Se déconnecter">${IPL}<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>`+(mt.length?`<ul class="lst lst2">${pgm.map(row).join('')}</ul><div class="pgr"><button data-pg="-1"${hp<1?' disabled':''} aria-label="Page pr\u00e9c\u00e9dente">\u2039</button><span>Page ${hp+1} / ${pc}</span><button data-pg="1"${hp>=pc-1?' disabled':''} aria-label="Page suivante">\u203a</button><label>Par page <select id="ps">${[10,20,50,100].map(n=>`<option${n===hs?' selected':''}>${n}</option>`).join('')}</select></label></div>`:`<p class="mut">${RO()?'Aucune analyse ne te concerne pour l\u2019instant.':'Aucune analyse pour l\u2019instant. Cr\u00e9e la premi\u00e8re avec le bouton +.'}</p>`)};
+const nm=id=>DB.matches.filter(m=>m.roster.some(p=>p.pid===id)).length;
+const renderPlayers=()=>`<div class="add"><input id="np" placeholder="Nom du joueur" maxlength="30" aria-label="Nom du nouveau joueur"><button class="big" data-act="addp">Ajouter</button></div>`+(DB.players.length?`<ul class="lst">${DB.players.map(p=>`<li><button class="it" data-pl="${p.id}"><b>${esc(p.name)}</b><span>${nm(p.id)} analyse${nm(p.id)>1?'s':''}${(p.alias||[]).length?' · 🎤 '+esc(p.alias.join(', ')):''}</span></button>${nm(p.id)?'':askb('delp',p.id)}</li>`).join('')}</ul>`:`<p class="mut">Ajoute tes joueurs ici : ils seront proposés quand tu crées une analyse.</p>`);
+const nameBox=()=>{const pl=DB.players.find(p=>p.id===cur);return `<h2>Nom du joueur</h2><div class="add"><input id="nn" value="${esc(pl.name)}" maxlength="30" aria-label="Nom du joueur"><button class="big" data-act="ren">Renommer</button></div>`};
+function renamePlayer(){const pl=DB.players.find(p=>p.id===cur),v=(document.getElementById('nn').value||'').trim();if(!pl||!v||v===pl.name)return;
+ if(DB.players.some(p=>p.id!==pl.id&&p.name.toLowerCase()===v.toLowerCase())){toast('Ce nom existe déjà dans ta liste');return}
+ pl.name=v;DB.matches.forEach(m=>{m.roster.forEach(r=>{if(r.pid===pl.id)r.name=v});m.sets.forEach(st=>st.players.forEach(q=>{if(q.pid===pl.id)q.name=v}))});
+ DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));save();render();toast('Nom modifié')}
+const accessBox=()=>{const c=(DB.invites||{})[cur];return `<h2>Accès du joueur</h2><p class="mut">Pour qu’il consulte ses analyses : il ouvre l’appli, choisit « Je suis un joueur », sélectionne son profil et saisit ce code. Il ne voit que les analyses où il joue.</p><div class="add"><input id="ic" value="${c?esc(c):''}" placeholder="Aucun code" readonly aria-label="Code d’accès"><button class="big" data-act="gcode">${c?'Nouveau code':'Générer un code'}</button></div><p><button class="alt" data-act="revoke" style="padding:8px 14px;border-radius:10px;font:500 15px Barlow,sans-serif;cursor:pointer">Révoquer les connexions de ce joueur</button></p>`};
+const aliasBox=()=>{const pl=DB.players.find(p=>p.id===cur),al=pl.alias||[];return `<h2>Reconnaissance vocale</h2><p class="mut">Mots reconnus pour « ${esc(pl.name)} » en plus de son nom : surnoms, ou orthographes que la reconnaissance comprend mal.</p><div class="al">${al.map((a,i)=>`<span class="chip">${esc(a)}<button data-dela="${i}" aria-label="Retirer l’alias ${esc(a)}">×</button></span>`).join('')||'<span class="mut">Aucun alias pour l’instant.</span>'}</div><div class="add"><input id="na" placeholder="Ajouter un alias (ex. Tom)" maxlength="30" aria-label="Nouvel alias"><button class="big" data-act="adda">Ajouter</button></div>`};
+function addAlias(){const i=document.getElementById('na'),v=i.value.trim(),pl=DB.players.find(p=>p.id===cur);if(!vnorm(v)||!pl)return;pl.alias=pl.alias||[];if(!pl.alias.some(a=>vnorm(a)===vnorm(v))){pl.alias.push(v);save()}render();const n=document.getElementById('na');if(n)n.focus()}
+const renderPlayer=mt=>{const ms=mt.filter(m=>m.roster.some(p=>p.pid===cur));return nameBox()+aliasBox()+accessBox()+`<h2>Historique des analyses</h2>`+(ms.length?`<ul class="lst">${ms.map(m=>{const me=m.roster.find(p=>p.pid===cur),mate=m.roster.find(p=>p.team===me.team&&p!==me),opp=m.roster.filter(p=>p.team!==me.team).map(p=>p.name).join(' / ');return `<li><button class="it" data-open="${m.id}"><b>${fmt(m.date)}</b><span>Avec ${esc(mate.name)} contre ${esc(opp)}</span><span>${m.sets.reduce((n,s)=>n+total(s.players.find(p=>p.pid===cur),SCHEMA[3]),0)} gagnants · ${m.sets.reduce((n,s)=>n+total(s.players.find(p=>p.pid===cur),SCHEMA[2]),0)} fautes · ${m.sets.length} set${m.sets.length>1?'s':''}</span></button></li>`}).join('')}</ul>`:`<p class="mut">Ce joueur n’a encore participé à aucune analyse.</p>`)};
+function openNew(){const d=document.getElementById('dlg');
+ if(DB.players.length<4)d.innerHTML=`<h2>Nouvelle analyse</h2><p>Il faut au moins 4 joueurs dans la liste (${DB.players.length} pour l’instant).</p><div class="dact"><button class="alt" data-close>Fermer</button><button class="big" data-go="players" data-close>Liste des joueurs</button></div>`;
+ else d.innerHTML=`<h2>Nouvelle analyse</h2><label>Date du match<input type="date" id="nd" value="${new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10)}"></label>${modeHtml()}<div class="sl">${[['Joueur 1','équipe A, droite'],['Joueur 2','équipe A, gauche'],['Joueur 3','équipe B, gauche'],['Joueur 4','équipe B, droite']].map(([a,b],i)=>`<label style="order:${[2,1,3,4][i]}">${a} <small>(${b})</small><select class="ns"><option value="">Choisir…</option>${DB.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label>`).join('')}</div><p class="err" id="err" role="alert"></p><div class="dact"><button class="alt" data-close>Annuler</button><button class="big" data-act="create">Créer et compter</button></div>`;
+ d.showModal()}
+function create(){const ids=[...document.querySelectorAll('.ns')].map(s=>s.value),date=document.getElementById('nd').value,err=document.getElementById('err');
+ if(!date||ids.some(x=>!x)){err.textContent='Choisis la date et les 4 joueurs.';return}
+ if(new Set(ids).size<4){err.textContent='Un joueur ne peut occuper qu’une seule place.';return}
+ const POS=[['A','right'],['A','left'],['B','left'],['B','right']];
+ const m={id:uid(),date,sets:[],roster:ids.map((pid,i)=>({id:'p'+(i+1),pid,name:DB.players.find(p=>p.id===pid).name,team:POS[i][0],position:POS[i][1]}))};
+ m.sets.push(newSet(m,1,readMode()));DB.matches.push(m);save();document.getElementById('dlg').close();M=m;si=0;S=m.sets[0];view='match';tab='count';render()}
+function addP(){const i=document.getElementById('np'),n=i.value.trim();if(!n||DB.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return;DB.players.push({id:uid(),name:n});DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));save();render();document.getElementById('np').focus()}
+function render(){vsync();
+ const hd=document.getElementById('hd'),app=document.getElementById('app');
+ const bk=(to,l)=>`<button class="bk" data-go="${to}">← ${l}</button>`;
+ const mt=[...DB.matches].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+ if(view==='match'&&S){if((M.closed||RO())&&tab==='count')tab='over';hd.innerHTML=`<div class="hr2"><div class="hl"><button class="bk" data-go="home" aria-label="Accueil">←</button><div class="ttl"><b>${fmtS(M.date)}</b></div><div class="tabs" role="tablist">${(M.closed||RO()?[]:[['count','Compter']]).concat([['over','Overview'],['stats','Statistiques']]).map(([k,l])=>`<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}</button>`).join('')}</div></div><div class="chips">${M.sets.map((s,i)=>`<button data-set="${i}" aria-pressed="${i===si}">Set ${s.n} · ${s.score.g.join('-')}</button>`).join('')}</div><div class="ia">${RO()?'':M.closed?'<button class="rop" data-act="reopen">Rouvrir le match</button>':`<button data-act="newset" title="Nouveau set" aria-label="Nouveau set">+</button><button class="rs${ask==='reset'?' ask':''}" data-act="reset" title="Reset du set" aria-label="Reset du set">${ask==='reset'?'Confirmer ?':'↺'}</button><button class="rs${ask==='delset'?' ask':''}" data-act="delset" title="Supprimer le set" aria-label="Supprimer le set">${ask==='delset'?'Confirmer ?':'🗑'}</button>`}${M.closed||RO()?'':`<button data-act="mic" title="Commande vocale" aria-label="Commande vocale" aria-pressed="${vOpen}">🎤</button>`}<button data-act="export" title="Exporter en PDF" aria-label="Exporter en PDF"><span class="pi">📄<b>PDF</b></span></button><button data-act="flip" title="Inverser les côtés" aria-label="Inverser les côtés" aria-pressed="${!!S.flip}">⇅</button></div></div>${banner(tab==='count')}`;app.innerHTML=tab==='count'?renderCount():tab==='over'?renderOver():renderStats()}
+ else if(view==='boot'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderBoot()}
+ else if(view==='login'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderLogin()}
+ else if(view==='pick'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderPick()}
+ else if(view==='players'){hd.innerHTML=bk('home','Accueil')+'<h1>Liste des joueurs</h1>';app.innerHTML=renderPlayers()}
+ else if(view==='player'&&DB.players.some(p=>p.id===cur)){hd.innerHTML=bk('players','Liste des joueurs')+`<h1>${esc(DB.players.find(p=>p.id===cur).name)}</h1>`;app.innerHTML=renderPlayer(mt)}
+ else{view='home';hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderHome(mt)}
+ const l=view==='match'&&S?S.history[S.history.length-1]:null,u=document.getElementById('undo');
+ if(u){u.disabled=!l;u.title=l?'Annuler : '+(l.snap?l.lbl:`${S.players.find(p=>p.id===l.pid).name} · ${LBL[l.a]} ${l.d>0?'+':'−'}${Math.abs(l.d)}`):'Rien à annuler'}}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button');if(!t){if(mn){mn=false;render()}return}const prev=ask,pm=mn;ask=null;mn=false;
+ if(t.dataset.tab){tab=t.dataset.tab;render();return}
+ if(t.dataset.a){hit(t.dataset.p,t.dataset.a);return}
+ if(t.id==='undo'){const l=S.history.pop();if(l){if(l.pid)bump(l.pid,l.a,-l.d);if(l.a2)bump(l.pid,l.a2,-l.d);if(l.brk)bump(l.brk,'services.breaks',-1);if(l.ace)bump(l.ace,'services.aces',-1);if(l.pw)bump(l.pw[0],l.pw[1],-1);if(l.pp!==undefined)S.pend=JSON.parse(l.pp);if(l.snap)S.score=JSON.parse(l.snap);save();render()}return}
+ if(t.dataset.set){si=+t.dataset.set;S=M.sets[si];render();return}
+ if(t.dataset.sv){setServer(t.dataset.sv);S.ch=false;save();render();return}
+ if(t.dataset.svc){S.ch=true;render();return}
+ if(t.dataset.go){if(t.hasAttribute('data-close'))document.getElementById('dlg').close();view=t.dataset.go;cur=null;render();return}
+ if(t.hasAttribute('data-close')){document.getElementById('dlg').close();return}
+ if(t.dataset.open){M=DB.matches.find(m=>m.id===t.dataset.open);si=M.sets.length-1;S=M.sets[si];view='match';tab='over';window.scrollTo(0,0);render();return}
+ if(t.dataset.pg){hp+=+t.dataset.pg;render();return}
+ if(t.dataset.dela!==undefined){const pl=DB.players.find(x=>x.id===cur);if(pl&&pl.alias){pl.alias.splice(+t.dataset.dela,1);save();render()}return}
+ if(t.dataset.exp){exportMatch(t.dataset.exp);return}
+ if(t.dataset.pl){view='player';cur=t.dataset.pl;render();return}
+ if(t.dataset.del){if(prev===t.dataset.del)DB.matches=DB.matches.filter(m=>m.id!==t.dataset.del);else ask=t.dataset.del;save();render();return}
+ if(t.dataset.delp){if(prev===t.dataset.delp)DB.players=DB.players.filter(p=>p.id!==t.dataset.delp);else ask=t.dataset.delp;save();render();return}
+ if(t.dataset.act==='new')openNew();
+ else if(t.dataset.act==='addp')addP();
+ else if(t.dataset.act==='imp')document.getElementById('imp').click();
+ else if(t.dataset.act==='create')create();
+ else if(t.dataset.act==='menu'){mn=!pm;render()}
+ else if(t.dataset.act==='newset'){render();openSet()}
+ else if(t.dataset.act==='reset'){if(prev==='reset'){const n=newSet(M,S.n,S.mode);S.players=n.players;S.score=n.score;S.first=n.first;S.t0=n.t0;S.ch=false;S.pend=null;S.history=[];save()}else ask='reset';render()}
+ else if(t.dataset.act==='close-match'){document.getElementById('dlg').close();M.closed=true;tab='over';save();render()}
+ else if(t.dataset.act==='reopen'){M.closed=false;tab='count';save();render()}
+ else if(t.dataset.act==='endset')endSetDlg();
+ else if(t.dataset.act==='mic')voiceToggle();
+ else if(t.dataset.act==='glogin'){loginMsg='';FBS.google().catch(e=>{loginMsg='Connexion Google impossible : '+(e.code||e.message);render()})}
+ else if(t.dataset.act==='alogin'){loginMsg='';FBS.anon().catch(e=>{loginMsg='Connexion impossible : '+(e.code||e.message);render()})}
+ else if(t.dataset.act==='claim')claim();
+ else if(t.dataset.act==='logout'){loginMsg='';FBS.out()}
+ else if(t.dataset.act==='reload')reloadData();
+ else if(t.dataset.act==='gcode')newCode();
+ else if(t.dataset.act==='revoke')revoke();
+ else if(t.dataset.act==='adda')addAlias();
+ else if(t.dataset.act==='ren')renamePlayer();
+ else if(t.dataset.act==='delset'){if(M.sets.length<2)toast('Impossible : une analyse doit garder au moins un set');else{if(prev==='delset'){M.sets.splice(si,1);M.sets.forEach((s,i)=>s.n=i+1);si=Math.min(si,M.sets.length-1);S=M.sets[si];save()}else ask='delset';render()}}
+ else if(t.dataset.act==='mkset')mkset();
+ else if(t.dataset.act==='export')exportPdf();
+ else if(t.dataset.act==='flip'){S.flip=!S.flip;save();render()}
+});
+document.addEventListener('change',e=>{const t=e.target,id=t.dataset.name;if(id){S.players.find(p=>p.id===id).name=t.value.trim()||'Joueur';save();render()}else if(t.dataset.a){const p=S.players.find(x=>x.id===t.dataset.p),n=Math.max(0,Math.floor(+t.value||0)),d=n-get(p,t.dataset.a);if(d&&bump(p.id,t.dataset.a,d))S.history.push({pid:p.id,a:t.dataset.a,d});save();render()}});
+document.addEventListener('focusin',e=>{if(e.target.classList.contains('v'))e.target.select()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('v'))e.target.blur();if(e.key==='Enter'&&e.target.id==='np')addP();if(e.key==='Enter'&&e.target.id==='na')addAlias();if(e.key==='Enter'&&e.target.id==='nn')renamePlayer()});
+render();
+boot();
+</script>
+</body>
+</html>
