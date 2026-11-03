@@ -7,21 +7,29 @@ service cloud.firestore {
     // ⚠️ REMPLACE par l'adresse Gmail de l'admin, en minuscules.
     function isAdmin() {
       return signedIn()
-        && request.auth.token.get('email', '') == 'tperez.insa@gmail.com'
+        && request.auth.token.get('email', '') == 'ton.adresse@gmail.com'
         && request.auth.token.get('email_verified', false) == true;
     }
 
     function claimPath() {
       return /databases/$(database)/documents/claims/$(request.auth.uid);
     }
+    // Un invité "connecté" = appareil ayant choisi un profil avec le bon code.
     function hasClaim() { return signedIn() && exists(claimPath()); }
     function myPlayer() { return get(claimPath()).data.playerId; }
 
-    // Liste des joueurs : noms + alias. Lisible par tout compte connecté
-    // (nécessaire pour afficher « Qui es-tu ? »). Écriture : admin seulement.
+    // Joueurs : lisibles par tout compte connecté (pour « Qui es-tu ? »).
+    // Un invité peut en créer ; il ne modifie/supprime que ceux qu'il a créés.
+    // L'admin peut tout.
     match /players/{id} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      allow create: if isAdmin()
+        || (hasClaim() && request.resource.data.ownerUid == request.auth.uid);
+      allow update: if isAdmin()
+        || (hasClaim() && resource.data.get('ownerUid', '') == request.auth.uid
+            && request.resource.data.ownerUid == request.auth.uid);
+      allow delete: if isAdmin()
+        || (hasClaim() && resource.data.get('ownerUid', '') == request.auth.uid);
     }
 
     // Codes d'accès par joueur : admin seulement (jamais lisibles par les invités).
@@ -43,11 +51,26 @@ service cloud.firestore {
       allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
     }
 
-    // Analyses : l'admin lit/écrit tout ; un invité lit uniquement les
-    // analyses où son joueur figure (champ playerIds), sans jamais écrire.
+    // Analyses.
+    //  - lecture : admin, ou participant (son joueur figure dans playerIds),
+    //              ou créateur de l'analyse ;
+    //  - création : admin, ou invité (propriétaire = lui, 4 joueurs) ;
+    //  - modification / suppression (donc aussi compter) : admin, ou son créateur.
     match /matches/{id} {
-      allow read: if isAdmin() || (hasClaim() && myPlayer() in resource.data.playerIds);
-      allow write: if isAdmin();
+      allow read: if isAdmin()
+        || (hasClaim() && myPlayer() in resource.data.playerIds)
+        || resource.data.ownerUid == request.auth.uid;
+      allow create: if isAdmin()
+        || (hasClaim() && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.playerIds is list
+            && request.resource.data.playerIds.size() == 4);
+      allow update: if isAdmin()
+        || (hasClaim() && resource.data.get('ownerUid', '') == request.auth.uid
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.playerIds is list
+            && request.resource.data.playerIds.size() == 4);
+      allow delete: if isAdmin()
+        || (hasClaim() && resource.data.get('ownerUid', '') == request.auth.uid);
     }
   }
 }

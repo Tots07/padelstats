@@ -35,10 +35,24 @@ dans les fichiers : à ressaisir dans la page de chaque joueur.
 1. Admin : **profil → clic sur le joueur → Accès du joueur → Générer un code**.
 2. Donner au joueur l'adresse de l'appli et son code.
 3. Le joueur ouvre l'appli → **Je suis un joueur** → choisit son profil → saisit le code.
-   Il voit uniquement les analyses où il joue (Overview, Statistiques, PDF), en lecture seule.
    Son appareil reste connecté.
 4. **Révoquer les connexions de ce joueur** coupe l'accès de ses appareils ; **Nouveau code**
    protège les futures connexions.
+
+### Droits d'un joueur invité
+
+| Action | Invité | Admin |
+|---|---|---|
+| Voir les analyses où son joueur figure (Overview, Statistiques, PDF) | oui, en lecture seule | toutes |
+| Créer / importer une analyse, la compter, la clore, la supprimer | oui, **sur celles qu'il a créées** | toutes |
+| Modifier ou supprimer l'analyse d'un autre | non | oui |
+| Ajouter un joueur | oui | oui |
+| Renommer, modifier les alias, supprimer un joueur | **seulement ceux qu'il a créés** | tous |
+| Codes d'accès, révocation | non | oui |
+
+Les analyses et joueurs créés **avant** cette version n'ont pas de propriétaire : seul
+l'admin peut les modifier. L'admin voit et peut modifier ce que les invités créent.
+Un invité peut créer une analyse sans y figurer ; il la voit alors comme créateur.
 
 ## 5. À savoir
 
@@ -58,6 +72,7 @@ dans les fichiers : à ressaisir dans la page de chaque joueur.
 1. Connexion admin : créer un joueur → il apparaît dans Firestore (`players`).
 2. Créer une analyse → document dans `matches` avec `playerIds`.
 3. Dans une fenêtre privée : **Je suis un joueur** → mauvais code refusé, bon code accepté,
-   seules ses analyses s'affichent.
+   seules ses analyses (créées ou où il joue) s'affichent ; l'analyse d'un autre est en
+   lecture seule ; il peut créer et compter dans la sienne.
 4. Console Firebase → Firestore → **Règles → Simulateur** : lire `/matches/x` sans être
    connecté doit être refusé.

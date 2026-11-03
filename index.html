@@ -305,6 +305,17 @@ header{padding:12px 12px 0}
 .lgb{display:grid;gap:10px;margin-top:14px}
 .pk{display:grid;gap:8px;margin-top:10px}
 .pk select,.pk input{font:400 16px Barlow,sans-serif;padding:10px 12px;border:1.5px solid var(--ln);border-radius:10px;background:var(--sf);color:var(--ink)}
+.pl1{display:flex;flex-wrap:wrap;align-items:center;gap:10px 28px;margin:6px 0 18px}
+.pg1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pn{font:700 26px "Barlow Semi Condensed",sans-serif}
+.ed{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1.5px solid var(--ln);background:var(--sf);color:var(--ink);cursor:pointer;padding:0}
+.ed:hover{background:var(--bg)}
+.pg1 input{font:500 15px Barlow,sans-serif;padding:5px 8px;border:1.5px solid var(--ln);border-radius:8px;background:var(--sf);color:var(--ink);min-width:0}
+.pg1 #nn{font:700 22px "Barlow Semi Condensed",sans-serif;width:220px}
+.pg1 #ic{width:110px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.pg1 #na{width:120px}
+.vlabel{font-weight:600;cursor:help;border-bottom:1px dotted var(--mut)}
+.pg1 .al{margin:0;display:flex;flex-wrap:wrap;gap:6px}
 </style>
 </head>
 <body>
@@ -363,14 +374,17 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let DB={players:[],matches:[],invites:{}},S,M,si=0,tab='count',view='boot',cur=null,ask=null,mn=false,CS=null,hp=0,hs=20;
 const PS={p1:'right',p2:'left',p3:'left',p4:'right'};zero();DB.matches.forEach(m=>{if(!m.sets){m.roster=m.players.map(({id,pid,name,team,position})=>({id,pid,name,team,position}));m.sets=[{id:uid(),n:1,history:m.history||[],players:m.players}];delete m.players;delete m.history}
  m.roster.forEach(r=>r.position=PS[r.id]);m.sets.forEach(s=>{s.first=s.first||{A:null,B:null};if(s.t0===undefined)s.t0=null;s.mode=s.mode||{games:6,rule:'star'};s.score=s.score||{g:[0,0],p:[0,0],tb:false,done:null,gl:[]};s.players.forEach(p=>{p.position=PS[p.id];const w=p.winners;let c=0;for(const k in w)if(typeof w[k]==='number'){w[k]={forehand:w[k],backhand:0};c=1}if(typeof p.services.breaks!=='number')p.services.breaks=0;if(c)s.history=[]})})});
-let ROLE=null,MEP=null,synced={},tmr=null,cst='local',loginMsg='',pickSel='';
-const RO=()=>ROLE!=='admin';
+let ROLE=null,MEP=null,UID=null,synced={},tmr=null,cst='local',loginMsg='',pickSel='';
+const RO=m=>ROLE!=='admin'&&!(m&&m.ownerUid&&m.ownerUid===UID);
+const canEditP=id=>{const p=DB.players.find(x=>x.id===id);return !!p&&(ROLE==='admin'||(!!p.ownerUid&&p.ownerUid===UID))};
 const trimO=m=>{const o=JSON.parse(JSON.stringify(m,(k,v)=>k==='history'&&Array.isArray(v)?v.slice(-60):v));o.playerIds=m.roster.map(r=>r.pid);return o};
-const save=()=>{if(ROLE==='admin'){clearTimeout(tmr);tmr=setTimeout(push,600)}};
+const save=()=>{if(ROLE){clearTimeout(tmr);tmr=setTimeout(push,600)}};
+const flush=()=>{if(ROLE&&tmr){clearTimeout(tmr);tmr=null;push()}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});window.addEventListener('pagehide',flush);
 const setSt=s=>{cst=s;if(view==='home')render()};
 const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)};
 function saveBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
-function push(){if(ROLE!=='admin')return;
+function push(){if(!ROLE)return;
  const want={};DB.players.forEach(p=>want['players/'+p.id]=JSON.stringify(p));DB.matches.forEach(m=>want['matches/'+m.id]=JSON.stringify(trimO(m)));
  const jobs=[];
  for(const k in want)if(synced[k]!==want[k]){const v=want[k];synced[k]=v;jobs.push(FBS.set(k,JSON.parse(v)).catch(e=>{if(synced[k]===v)delete synced[k];throw e}))}
@@ -379,11 +393,13 @@ function push(){if(ROLE!=='admin')return;
 async function loadAdmin(){const [pl,ma,iv]=await Promise.all([FBS.list('players'),FBS.list('matches'),FBS.list('invites')]);
  DB.players=pl.sort((a,b)=>a.name.localeCompare(b.name,'fr'));DB.matches=ma.map(m=>{delete m.playerIds;return m});DB.invites={};iv.forEach(i=>DB.invites[i.id]=i.code);
  synced={};DB.players.forEach(p=>synced['players/'+p.id]=JSON.stringify(p));DB.matches.forEach(m=>synced['matches/'+m.id]=JSON.stringify(trimO(m)));cst='ok'}
-async function loadGuest(){DB.players=await FBS.list('players');DB.matches=await FBS.list('matches',['playerIds','array-contains',MEP]);cst='ok'}
+async function loadGuest(){const [pl,own,par]=await Promise.all([FBS.list('players'),FBS.list('matches',['ownerUid','==',UID]),FBS.list('matches',['playerIds','array-contains',MEP])]);
+ DB.players=pl.sort((a,b)=>a.name.localeCompare(b.name,'fr'));const seen={};DB.matches=[...own,...par].filter(m=>seen[m.id]?0:(seen[m.id]=1));DB.matches.forEach(m=>delete m.playerIds);DB.invites={};
+ synced={};DB.players.forEach(p=>synced['players/'+p.id]=JSON.stringify(p));DB.matches.forEach(m=>synced['matches/'+m.id]=JSON.stringify(trimO(m)));cst='ok'}
 async function boot(){
  view='boot';render();await window.fbReady;
  if(!window.FBS){loginMsg='Firebase indisponible : vérifie la connexion internet.';view='login';render();return}
- FBS.onAuth(async u=>{try{
+ FBS.onAuth(async u=>{try{UID=u?u.uid:null;
   if(!u){ROLE=null;MEP=null;DB={players:[],matches:[],invites:{}};M=S=null;view='login';render();return}
   if(!u.isAnonymous){
    let ok=true;try{await FBS.get('invites/__ping')}catch(e){ok=false}
@@ -397,7 +413,7 @@ async function claim(){const pid=document.getElementById('pp').value,code=docume
  if(!pid||!code){loginMsg='Choisis ton profil et saisis le code.';render();return}
  try{await FBS.set('claims/'+u.uid,{playerId:pid,code});ROLE='guest';MEP=pid;await loadGuest();loginMsg='';view='home';render()}
  catch(e){loginMsg=e.code==='permission-denied'?'Code incorrect pour ce profil.':'Erreur : '+(e.code||e.message);render()}}
-async function reloadData(){try{if(ROLE==='admin'){if(cst==='sync'){toast('Synchronisation en cours…');return}await loadAdmin()}else await loadGuest();M=S=null;render();toast('Données actualisées')}catch(e){toast('Actualisation impossible')}}
+async function reloadData(){try{if(cst==='sync'){toast('Synchronisation en cours…');return}if(ROLE==='admin')await loadAdmin();else await loadGuest();M=S=null;render();toast('Données actualisées')}catch(e){toast('Actualisation impossible')}}
 const genCode=()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];return c};
 async function newCode(){const code=genCode();try{await FBS.set('invites/'+cur,{code});DB.invites[cur]=code;render()}catch(e){toast('Impossible de créer le code')}}
 async function revoke(){try{const cl=await FBS.list('claims',['playerId','==',cur]);await Promise.all(cl.map(c=>FBS.del('claims/'+c.id)));toast(cl.length?cl.length+' connexion(s) révoquée(s)':'Aucune connexion à révoquer')}catch(e){toast('Révocation impossible')}}
@@ -408,11 +424,11 @@ function exportMatch(id){const m=DB.matches.find(x=>x.id===id);if(!m)return;save
 async function importMatch(f){if(!f)return;try{
  const m=JSON.parse(await f.text()).match;
  if(!m||!Array.isArray(m.roster)||m.roster.length!==4||!Array.isArray(m.sets)||!m.sets.length||!m.sets.every(s=>s.score&&s.mode&&Array.isArray(s.players)))throw 0;
- m.id=uid();m.roster.forEach(r=>{let p=DB.players.find(x=>x.name.toLowerCase()===String(r.name).toLowerCase());if(!p){p={id:uid(),name:String(r.name)};DB.players.push(p)}r.pid=p.id});
+ m.id=uid();m.ownerUid=UID;m.roster.forEach(r=>{let p=DB.players.find(x=>x.name.toLowerCase()===String(r.name).toLowerCase());if(!p){p={id:uid(),ownerUid:UID,name:String(r.name)};DB.players.push(p)}r.pid=p.id});
  DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));
  m.sets.forEach(s=>{s.id=uid();s.history=s.history||[];s.first=s.first||{A:null,B:null};if(s.t0===undefined)s.t0=null;s.players.forEach(p=>{const r=m.roster.find(x=>x.id===p.id);if(r)p.pid=r.pid})});
  DB.matches.push(m);save();render();toast('Analyse importée')}catch(e){toast('Fichier invalide : import impossible')}}
-document.addEventListener('change',e=>{if(e.target.id==='imp'){[...e.target.files].forEach(f=>importMatch(f));e.target.value=''}if(e.target.id==='ps'){hs=+e.target.value;hp=0;render()}});
+document.addEventListener('change',e=>{if(e.target.id==='imp'){[...e.target.files].forEach(f=>importMatch(f));e.target.value=''}if(e.target.id==='ps'){hs=+e.target.value;hp=plp=php=0;render()}if(e.target.id==='ic')setCode(e.target.value);});
 const ref=(p,pa)=>{const k=pa.split('.');const last=k.pop();return [k.reduce((o,x)=>o[x],p),last]};
 const get=(p,pa)=>{const [o,k]=ref(p,pa);return o[k]};
 const bump=(pid,pa,d)=>{const p=S.players.find(x=>x.id===pid);const [o,k]=ref(p,pa);if(o[k]+d<0)return false;o[k]+=d;return true};
@@ -485,7 +501,7 @@ function svHtml(){const sc=S.score,sv=srv();
 function banner(act){const sc=S.score,[pa,pb]=pts(sc,S.mode.rule),T=['A','B'],sv=srv(),pr=sc.done===null&&!(sv&&!S.ch)?svHtml():'';
  const nm=t=>S.players.filter(p=>p.team===T[t]).map(p=>(sv&&sv.id===p.id?'<button class="bl" data-svc="1" aria-label="Changer le serveur">🎾</button> ':'')+esc(p.name)).join(' / ');
  const tm=(t,x)=>`<div class="tm ${T[t]}"><span class="tn">${nm(t)}</span><span class="gm">${sc.g[t]}</span><span class="ps">${x}</span></div>`;
- return `<div class="sb">${tm(0,pa)}<div class="mid"><b>Set ${S.n}</b>${S.mode.games} jeux · ${RL[S.mode.rule]}${sc.done!==null?'<br>Set gagné par l’équipe '+T[sc.done]+(M.closed||RO()?'':' <button class="svb" data-act="endset">Suite</button>'):(sc.tb?'<br>Tie-break':'')+(pr?'<br>'+pr:'')}</div>${tm(1,pb)}</div>`}
+ return `<div class="sb">${tm(0,pa)}<div class="mid"><b>Set ${S.n}</b>${S.mode.games} jeux · ${RL[S.mode.rule]}${sc.done!==null?'<br>Set gagné par l’équipe '+T[sc.done]+(M.closed||RO(M)?'':' <button class="svb" data-act="endset">Suite</button>'):(sc.tb?'<br>Tie-break':'')+(pr?'<br>'+pr:'')}</div>${tm(1,pb)}</div>`}
 async function exportPdf(){
  const b=document.querySelector('[data-act="export"]');
  b.textContent='…';b.disabled=true;
@@ -582,19 +598,35 @@ const mtitle=m=>m.roster.slice(0,2).map(p=>p.name).join(' / ')+' vs '+m.roster.s
 const askb=(c,id)=>`<button class="x${ask===id?' ask':''}" data-${c}="${id}" aria-label="Supprimer">${ask===id?'Supprimer ?':'🗑'}</button>`;
 const IPL='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
 const renderHome=mt=>{const pc=Math.max(1,Math.ceil(mt.length/hs));hp=Math.min(hp,pc-1);const pgm=mt.slice(hp*hs,hp*hs+hs);
- const row=m=>`<li><button class="it" data-open="${m.id}"><div class="l1"><b>${fmt(m.date)}</b><span>&nbsp;: ${m.sets.map(s=>s.score.g.join('-')).join(' \u00b7 ')}</span></div><span>${esc(mtitle(m))}</span></button>${RO()?'':`<button class="x" data-exp="${m.id}" title="Exporter l\u2019analyse (fichier JSON)" aria-label="Exporter l\u2019analyse">${IPL}<path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>${askb('del',m.id)}`}</li>`;
- return `<div class="hh1"><h2>${RO()?'Mes analyses':'Analyse de match'}${cst==='err'?'<span title="Sauvegarde dans le compte impossible : enregistrement Firebase refusé ou impossible"> \u26a0</span>':''}</h2><div class="ia2">${RO()?'':`<button class="big ico" data-act="new" title="Nouvelle analyse" aria-label="Nouvelle analyse">${IPL}<path d="M12 5v14M5 12h14"/></svg></button><button class="big alt ico" data-act="imp" title="Importer une analyse" aria-label="Importer une analyse">${IPL}<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></button><input type="file" id="imp" accept=".json,application/json" multiple hidden><button class="big alt ico" data-go="players" title="Profil : liste des joueurs" aria-label="Liste des joueurs">${IPL}<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></button>`}<button class="big alt ico" data-act="reload" title="Actualiser" aria-label="Actualiser">${IPL}<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button><button class="big alt ico" data-act="logout" title="Se déconnecter" aria-label="Se déconnecter">${IPL}<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>`+(mt.length?`<ul class="lst lst2">${pgm.map(row).join('')}</ul><div class="pgr"><button data-pg="-1"${hp<1?' disabled':''} aria-label="Page pr\u00e9c\u00e9dente">\u2039</button><span>Page ${hp+1} / ${pc}</span><button data-pg="1"${hp>=pc-1?' disabled':''} aria-label="Page suivante">\u203a</button><label>Par page <select id="ps">${[10,20,50,100].map(n=>`<option${n===hs?' selected':''}>${n}</option>`).join('')}</select></label></div>`:`<p class="mut">${RO()?'Aucune analyse ne te concerne pour l\u2019instant.':'Aucune analyse pour l\u2019instant. Cr\u00e9e la premi\u00e8re avec le bouton +.'}</p>`)};
+ const row=m=>`<li><button class="it" data-open="${m.id}"><div class="l1"><b>${fmt(m.date)}</b><span>&nbsp;: ${m.sets.map(s=>s.score.g.join('-')).join(' \u00b7 ')}</span></div><span>${esc(mtitle(m))}</span></button>${RO(m)?'':`<button class="x" data-exp="${m.id}" title="Exporter l\u2019analyse (fichier JSON)" aria-label="Exporter l\u2019analyse">${IPL}<path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>${askb('del',m.id)}`}</li>`;
+ return `<div class="hh1"><h2>${(ROLE!=='admin')?'Mes analyses':'Analyse de match'}${cst==='err'?'<span title="Sauvegarde dans le compte impossible : enregistrement Firebase refusé ou impossible"> \u26a0</span>':''}</h2><div class="ia2">${`<button class="big ico" data-act="new" title="Nouvelle analyse" aria-label="Nouvelle analyse">${IPL}<path d="M12 5v14M5 12h14"/></svg></button><button class="big alt ico" data-act="imp" title="Importer une analyse" aria-label="Importer une analyse">${IPL}<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></button><input type="file" id="imp" accept=".json,application/json" multiple hidden><button class="big alt ico" data-go="players" title="Profil : liste des joueurs" aria-label="Liste des joueurs">${IPL}<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></button>`}<button class="big alt ico" data-act="reload" title="Actualiser" aria-label="Actualiser">${IPL}<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></button><button class="big alt ico" data-act="logout" title="Se déconnecter" aria-label="Se déconnecter">${IPL}<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></div></div>`+(mt.length?`<ul class="lst lst2">${pgm.map(row).join('')}</ul><div class="pgr"><button data-pg="-1"${hp<1?' disabled':''} aria-label="Page pr\u00e9c\u00e9dente">\u2039</button><span>Page ${hp+1} / ${pc}</span><button data-pg="1"${hp>=pc-1?' disabled':''} aria-label="Page suivante">\u203a</button><label>Par page <select id="ps">${[10,20,50,100].map(n=>`<option${n===hs?' selected':''}>${n}</option>`).join('')}</select></label></div>`:`<p class="mut">${(ROLE!=='admin')?'Aucune analyse ne te concerne pour l\u2019instant.':'Aucune analyse pour l\u2019instant. Cr\u00e9e la premi\u00e8re avec le bouton +.'}</p>`)};
 const nm=id=>DB.matches.filter(m=>m.roster.some(p=>p.pid===id)).length;
-const renderPlayers=()=>`<div class="add"><input id="np" placeholder="Nom du joueur" maxlength="30" aria-label="Nom du nouveau joueur"><button class="big" data-act="addp">Ajouter</button></div>`+(DB.players.length?`<ul class="lst">${DB.players.map(p=>`<li><button class="it" data-pl="${p.id}"><b>${esc(p.name)}</b><span>${nm(p.id)} analyse${nm(p.id)>1?'s':''}${(p.alias||[]).length?' · 🎤 '+esc(p.alias.join(', ')):''}</span></button>${nm(p.id)?'':askb('delp',p.id)}</li>`).join('')}</ul>`:`<p class="mut">Ajoute tes joueurs ici : ils seront proposés quand tu crées une analyse.</p>`);
-const nameBox=()=>{const pl=DB.players.find(p=>p.id===cur);return `<h2>Nom du joueur</h2><div class="add"><input id="nn" value="${esc(pl.name)}" maxlength="30" aria-label="Nom du joueur"><button class="big" data-act="ren">Renommer</button></div>`};
-function renamePlayer(){const pl=DB.players.find(p=>p.id===cur),v=(document.getElementById('nn').value||'').trim();if(!pl||!v||v===pl.name)return;
+const I16=p=>`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC={edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M20 6 9 17l-5-5"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',ban:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>'};
+let plp=0,php=0,enm=false;
+const pagerH=(n,idx,k)=>{const pc=Math.max(1,Math.ceil(n/hs));return `<div class="pgr"><button data-pg="-1" data-pk="${k}"${idx<1?' disabled':''} aria-label="Page précédente">‹</button><span>Page ${idx+1} / ${pc}</span><button data-pg="1" data-pk="${k}"${idx>=pc-1?' disabled':''} aria-label="Page suivante">›</button><label>Par page <select id="ps">${[10,20,50,100].map(x=>`<option${x===hs?' selected':''}>${x}</option>`).join('')}</select></label></div>`};
+const renderPlayers=()=>{const n=DB.players.length,pc=Math.max(1,Math.ceil(n/hs));plp=Math.min(plp,pc-1);const pg=DB.players.slice(plp*hs,plp*hs+hs);
+ return `<div class="add"><input id="np" placeholder="Nom du nouveau joueur" maxlength="30" aria-label="Nom du nouveau joueur"><button class="big ico" data-act="addp" title="Ajouter le joueur" aria-label="Ajouter le joueur">${IPL}<path d="M12 5v14M5 12h14"/></svg></button></div>`+(n?`<ul class="lst lst2">${pg.map(p=>`<li><button class="it" data-pl="${p.id}"><b>${esc(p.name)}</b><span>${nm(p.id)} analyse${nm(p.id)>1?'s':''}${(p.alias||[]).length?' · 🎤 '+esc(p.alias.join(', ')):''}</span></button>${nm(p.id)||!canEditP(p.id)?'':askb('delp',p.id)}</li>`).join('')}</ul>${pagerH(n,plp,'pl')}`:`<p class="mut">Ajoute tes joueurs ici : ils seront proposés quand tu crées une analyse.</p>`)};
+function renamePlayer(){const pl=DB.players.find(p=>p.id===cur),inp=document.getElementById('nn'),v=((inp&&inp.value)||'').trim();if(!pl||!canEditP(cur))return;
+ if(!v||v===pl.name){enm=false;render();return}
  if(DB.players.some(p=>p.id!==pl.id&&p.name.toLowerCase()===v.toLowerCase())){toast('Ce nom existe déjà dans ta liste');return}
- pl.name=v;DB.matches.forEach(m=>{m.roster.forEach(r=>{if(r.pid===pl.id)r.name=v});m.sets.forEach(st=>st.players.forEach(q=>{if(q.pid===pl.id)q.name=v}))});
- DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));save();render();toast('Nom modifié')}
-const accessBox=()=>{const c=(DB.invites||{})[cur];return `<h2>Accès du joueur</h2><p class="mut">Pour qu’il consulte ses analyses : il ouvre l’appli, choisit « Je suis un joueur », sélectionne son profil et saisit ce code. Il ne voit que les analyses où il joue.</p><div class="add"><input id="ic" value="${c?esc(c):''}" placeholder="Aucun code" readonly aria-label="Code d’accès"><button class="big" data-act="gcode">${c?'Nouveau code':'Générer un code'}</button></div><p><button class="alt" data-act="revoke" style="padding:8px 14px;border-radius:10px;font:500 15px Barlow,sans-serif;cursor:pointer">Révoquer les connexions de ce joueur</button></p>`};
-const aliasBox=()=>{const pl=DB.players.find(p=>p.id===cur),al=pl.alias||[];return `<h2>Reconnaissance vocale</h2><p class="mut">Mots reconnus pour « ${esc(pl.name)} » en plus de son nom : surnoms, ou orthographes que la reconnaissance comprend mal.</p><div class="al">${al.map((a,i)=>`<span class="chip">${esc(a)}<button data-dela="${i}" aria-label="Retirer l’alias ${esc(a)}">×</button></span>`).join('')||'<span class="mut">Aucun alias pour l’instant.</span>'}</div><div class="add"><input id="na" placeholder="Ajouter un alias (ex. Tom)" maxlength="30" aria-label="Nouvel alias"><button class="big" data-act="adda">Ajouter</button></div>`};
-function addAlias(){const i=document.getElementById('na'),v=i.value.trim(),pl=DB.players.find(p=>p.id===cur);if(!vnorm(v)||!pl)return;pl.alias=pl.alias||[];if(!pl.alias.some(a=>vnorm(a)===vnorm(v))){pl.alias.push(v);save()}render();const n=document.getElementById('na');if(n)n.focus()}
-const renderPlayer=mt=>{const ms=mt.filter(m=>m.roster.some(p=>p.pid===cur));return nameBox()+aliasBox()+accessBox()+`<h2>Historique des analyses</h2>`+(ms.length?`<ul class="lst">${ms.map(m=>{const me=m.roster.find(p=>p.pid===cur),mate=m.roster.find(p=>p.team===me.team&&p!==me),opp=m.roster.filter(p=>p.team!==me.team).map(p=>p.name).join(' / ');return `<li><button class="it" data-open="${m.id}"><b>${fmt(m.date)}</b><span>Avec ${esc(mate.name)} contre ${esc(opp)}</span><span>${m.sets.reduce((n,s)=>n+total(s.players.find(p=>p.pid===cur),SCHEMA[3]),0)} gagnants · ${m.sets.reduce((n,s)=>n+total(s.players.find(p=>p.pid===cur),SCHEMA[2]),0)} fautes · ${m.sets.length} set${m.sets.length>1?'s':''}</span></button></li>`}).join('')}</ul>`:`<p class="mut">Ce joueur n’a encore participé à aucune analyse.</p>`)};
+ pl.name=v;DB.matches.forEach(m=>{if(RO(m))return;m.roster.forEach(r=>{if(r.pid===pl.id)r.name=v});m.sets.forEach(st=>st.players.forEach(q=>{if(q.pid===pl.id)q.name=v}))});
+ DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));enm=false;save();render();toast('Nom modifié')}
+async function setCode(raw){const c=String(raw).toUpperCase().replace(/[^A-Z0-9]/g,'');if(ROLE!=='admin')return;
+ if(c.length<4){toast('Code : 4 à 12 lettres ou chiffres');render();return}
+ try{await FBS.set('invites/'+cur,{code:c});DB.invites[cur]=c;render();toast('Code enregistré')}catch(e){toast('Impossible d’enregistrer le code')}}
+function addAlias(){const i=document.getElementById('na'),v=i.value.trim(),pl=DB.players.find(p=>p.id===cur);if(!vnorm(v)||!pl||!canEditP(cur))return;pl.alias=pl.alias||[];if(!pl.alias.some(a=>vnorm(a)===vnorm(v))){pl.alias.push(v);save()}render();const n=document.getElementById('na');if(n)n.focus()}
+const renderPlayer=mt=>{const pl=DB.players.find(p=>p.id===cur),ed=canEditP(cur),adm=ROLE==='admin',code=(DB.invites||{})[cur]||'';
+ const ms=mt.filter(m=>m.roster.some(p=>p.pid===cur)),pc=Math.max(1,Math.ceil(ms.length/hs));php=Math.min(php,pc-1);const pgm=ms.slice(php*hs,php*hs+hs);
+ const sum=(m,sec)=>m.sets.reduce((n,s)=>{const q=s.players.find(p=>p.pid===cur);return n+(q?total(q,sec):0)},0);
+ const row=m=>{const me=m.roster.find(p=>p.pid===cur),mate=m.roster.find(p=>p.team===me.team&&p!==me),opp=m.roster.filter(p=>p.team!==me.team).map(p=>p.name).join(' / ');
+  return `<li><button class="it" data-open="${m.id}"><div class="l1"><b>${fmt(m.date)}</b><span>&nbsp;: ${m.sets.map(s=>s.score.g.join('-')).join(' · ')}</span></div><span>Avec ${esc(mate?mate.name:'?')} contre ${esc(opp)}</span><span>${sum(m,SCHEMA[3])} gagnants · ${sum(m,SCHEMA[2])} fautes · ${m.sets.length} set${m.sets.length>1?'s':''}</span></button></li>`};
+ const nameB=enm&&ed?`<input id="nn" value="${esc(pl.name)}" maxlength="30" aria-label="Nom du joueur"><button class="ed" data-act="ren" title="Enregistrer le nom" aria-label="Enregistrer le nom">${I16(IC.check)}</button><button class="ed" data-act="cname" title="Annuler" aria-label="Annuler">${I16(IC.x)}</button>`:`<span class="pn">${esc(pl.name)}</span>${ed?`<button class="ed" data-act="edname" title="Modifier le nom" aria-label="Modifier le nom">${I16(IC.edit)}</button>`:''}`;
+ const codeB=adm?`<div class="pg1"><span class="mut">Code</span><input id="ic" value="${esc(code)}" maxlength="12" placeholder="aucun" aria-label="Code d’accès (modifiable)" title="Code d’accès du joueur (modifiable)"><button class="ed" data-act="gcode" title="Générer un nouveau code" aria-label="Générer un nouveau code">${I16(IC.refresh)}</button><button class="ed" data-act="revoke" title="Révoquer les connexions de ce joueur" aria-label="Révoquer les connexions">${I16(IC.ban)}</button></div>`:'';
+ const tip=`Mots reconnus pour « ${pl.name} » en plus de son nom : surnoms, ou orthographes que la reconnaissance comprend mal.`;
+ const chips=(pl.alias||[]).map((a,i)=>`<span class="chip">${esc(a)}${ed?`<button data-dela="${i}" aria-label="Retirer l’alias ${esc(a)}">×</button>`:''}</span>`).join('');
+ const voiceB=`<div class="pg1"><span class="vlabel" title="${esc(tip)}">Reconnaissance vocale ⓘ</span>${chips?`<span class="al">${chips}</span>`:''}${ed?`<input id="na" placeholder="Alias" maxlength="30" aria-label="Nouvel alias"><button class="ed" data-act="adda" title="Ajouter l’alias" aria-label="Ajouter l’alias">${I16(IC.plus)}</button>`:''}</div>`;
+ return `<div class="pl1"><div class="pg1">${nameB}</div>${codeB}${voiceB}</div>${ed?'':'<p class="mut">Créé par quelqu’un d’autre : seul son créateur ou l’admin peut le modifier.</p>'}<h2>Historique des analyses</h2>`+(ms.length?`<ul class="lst lst2">${pgm.map(row).join('')}</ul>${pagerH(ms.length,php,'ph')}`:`<p class="mut">Ce joueur n’a encore participé à aucune analyse.</p>`)};
 function openNew(){const d=document.getElementById('dlg');
  if(DB.players.length<4)d.innerHTML=`<h2>Nouvelle analyse</h2><p>Il faut au moins 4 joueurs dans la liste (${DB.players.length} pour l’instant).</p><div class="dact"><button class="alt" data-close>Fermer</button><button class="big" data-go="players" data-close>Liste des joueurs</button></div>`;
  else d.innerHTML=`<h2>Nouvelle analyse</h2><label>Date du match<input type="date" id="nd" value="${new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10)}"></label>${modeHtml()}<div class="sl">${[['Joueur 1','équipe A, droite'],['Joueur 2','équipe A, gauche'],['Joueur 3','équipe B, gauche'],['Joueur 4','équipe B, droite']].map(([a,b],i)=>`<label style="order:${[2,1,3,4][i]}">${a} <small>(${b})</small><select class="ns"><option value="">Choisir…</option>${DB.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label>`).join('')}</div><p class="err" id="err" role="alert"></p><div class="dact"><button class="alt" data-close>Annuler</button><button class="big" data-act="create">Créer et compter</button></div>`;
@@ -603,19 +635,19 @@ function create(){const ids=[...document.querySelectorAll('.ns')].map(s=>s.value
  if(!date||ids.some(x=>!x)){err.textContent='Choisis la date et les 4 joueurs.';return}
  if(new Set(ids).size<4){err.textContent='Un joueur ne peut occuper qu’une seule place.';return}
  const POS=[['A','right'],['A','left'],['B','left'],['B','right']];
- const m={id:uid(),date,sets:[],roster:ids.map((pid,i)=>({id:'p'+(i+1),pid,name:DB.players.find(p=>p.id===pid).name,team:POS[i][0],position:POS[i][1]}))};
+ const m={id:uid(),ownerUid:UID,date,sets:[],roster:ids.map((pid,i)=>({id:'p'+(i+1),pid,name:DB.players.find(p=>p.id===pid).name,team:POS[i][0],position:POS[i][1]}))};
  m.sets.push(newSet(m,1,readMode()));DB.matches.push(m);save();document.getElementById('dlg').close();M=m;si=0;S=m.sets[0];view='match';tab='count';render()}
-function addP(){const i=document.getElementById('np'),n=i.value.trim();if(!n||DB.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return;DB.players.push({id:uid(),name:n});DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));save();render();document.getElementById('np').focus()}
+function addP(){const i=document.getElementById('np'),n=i.value.trim();if(!n||DB.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return;DB.players.push({id:uid(),ownerUid:UID,name:n});DB.players.sort((a,b)=>a.name.localeCompare(b.name,'fr'));save();render();document.getElementById('np').focus()}
 function render(){vsync();
  const hd=document.getElementById('hd'),app=document.getElementById('app');
  const bk=(to,l)=>`<button class="bk" data-go="${to}">← ${l}</button>`;
  const mt=[...DB.matches].sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
- if(view==='match'&&S){if((M.closed||RO())&&tab==='count')tab='over';hd.innerHTML=`<div class="hr2"><div class="hl"><button class="bk" data-go="home" aria-label="Accueil">←</button><div class="ttl"><b>${fmtS(M.date)}</b></div><div class="tabs" role="tablist">${(M.closed||RO()?[]:[['count','Compter']]).concat([['over','Overview'],['stats','Statistiques']]).map(([k,l])=>`<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}</button>`).join('')}</div></div><div class="chips">${M.sets.map((s,i)=>`<button data-set="${i}" aria-pressed="${i===si}">Set ${s.n} · ${s.score.g.join('-')}</button>`).join('')}</div><div class="ia">${RO()?'':M.closed?'<button class="rop" data-act="reopen">Rouvrir le match</button>':`<button data-act="newset" title="Nouveau set" aria-label="Nouveau set">+</button><button class="rs${ask==='reset'?' ask':''}" data-act="reset" title="Reset du set" aria-label="Reset du set">${ask==='reset'?'Confirmer ?':'↺'}</button><button class="rs${ask==='delset'?' ask':''}" data-act="delset" title="Supprimer le set" aria-label="Supprimer le set">${ask==='delset'?'Confirmer ?':'🗑'}</button>`}${M.closed||RO()?'':`<button data-act="mic" title="Commande vocale" aria-label="Commande vocale" aria-pressed="${vOpen}">🎤</button>`}<button data-act="export" title="Exporter en PDF" aria-label="Exporter en PDF"><span class="pi">📄<b>PDF</b></span></button><button data-act="flip" title="Inverser les côtés" aria-label="Inverser les côtés" aria-pressed="${!!S.flip}">⇅</button></div></div>${banner(tab==='count')}`;app.innerHTML=tab==='count'?renderCount():tab==='over'?renderOver():renderStats()}
+ if(view==='match'&&S){if((M.closed||RO(M))&&tab==='count')tab='over';hd.innerHTML=`<div class="hr2"><div class="hl"><button class="bk" data-go="home" aria-label="Accueil">←</button><div class="ttl"><b>${fmtS(M.date)}</b></div><div class="tabs" role="tablist">${(M.closed||RO(M)?[]:[['count','Compter']]).concat([['over','Overview'],['stats','Statistiques']]).map(([k,l])=>`<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}</button>`).join('')}</div></div><div class="chips">${M.sets.map((s,i)=>`<button data-set="${i}" aria-pressed="${i===si}">Set ${s.n} · ${s.score.g.join('-')}</button>`).join('')}</div><div class="ia">${RO(M)?'':M.closed?'<button class="rop" data-act="reopen">Rouvrir le match</button>':`<button data-act="newset" title="Nouveau set" aria-label="Nouveau set">+</button><button class="rs${ask==='reset'?' ask':''}" data-act="reset" title="Reset du set" aria-label="Reset du set">${ask==='reset'?'Confirmer ?':'↺'}</button><button class="rs${ask==='delset'?' ask':''}" data-act="delset" title="Supprimer le set" aria-label="Supprimer le set">${ask==='delset'?'Confirmer ?':'🗑'}</button>`}${M.closed||RO(M)?'':`<button data-act="mic" title="Commande vocale" aria-label="Commande vocale" aria-pressed="${vOpen}">🎤</button>`}<button data-act="export" title="Exporter en PDF" aria-label="Exporter en PDF"><span class="pi">📄<b>PDF</b></span></button><button data-act="flip" title="Inverser les côtés" aria-label="Inverser les côtés" aria-pressed="${!!S.flip}">⇅</button></div></div>${banner(tab==='count')}`;app.innerHTML=tab==='count'?renderCount():tab==='over'?renderOver():renderStats()}
  else if(view==='boot'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderBoot()}
  else if(view==='login'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderLogin()}
  else if(view==='pick'){hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderPick()}
  else if(view==='players'){hd.innerHTML=bk('home','Accueil')+'<h1>Liste des joueurs</h1>';app.innerHTML=renderPlayers()}
- else if(view==='player'&&DB.players.some(p=>p.id===cur)){hd.innerHTML=bk('players','Liste des joueurs')+`<h1>${esc(DB.players.find(p=>p.id===cur).name)}</h1>`;app.innerHTML=renderPlayer(mt)}
+ else if(view==='player'&&DB.players.some(p=>p.id===cur)){hd.innerHTML=bk('players','Liste des joueurs');app.innerHTML=renderPlayer(mt)}
  else{view='home';hd.innerHTML='<h1>Padel Stats</h1>';app.innerHTML=renderHome(mt)}
  const l=view==='match'&&S?S.history[S.history.length-1]:null,u=document.getElementById('undo');
  if(u){u.disabled=!l;u.title=l?'Annuler : '+(l.snap?l.lbl:`${S.players.find(p=>p.id===l.pid).name} · ${LBL[l.a]} ${l.d>0?'+':'−'}${Math.abs(l.d)}`):'Rien à annuler'}}
@@ -630,12 +662,12 @@ document.addEventListener('click',e=>{
  if(t.dataset.go){if(t.hasAttribute('data-close'))document.getElementById('dlg').close();view=t.dataset.go;cur=null;render();return}
  if(t.hasAttribute('data-close')){document.getElementById('dlg').close();return}
  if(t.dataset.open){M=DB.matches.find(m=>m.id===t.dataset.open);si=M.sets.length-1;S=M.sets[si];view='match';tab='over';window.scrollTo(0,0);render();return}
- if(t.dataset.pg){hp+=+t.dataset.pg;render();return}
+ if(t.dataset.pg){const k=t.dataset.pk,d=+t.dataset.pg;if(k==='pl')plp+=d;else if(k==='ph')php+=d;else hp+=d;render();return}
  if(t.dataset.dela!==undefined){const pl=DB.players.find(x=>x.id===cur);if(pl&&pl.alias){pl.alias.splice(+t.dataset.dela,1);save();render()}return}
  if(t.dataset.exp){exportMatch(t.dataset.exp);return}
- if(t.dataset.pl){view='player';cur=t.dataset.pl;render();return}
- if(t.dataset.del){if(prev===t.dataset.del)DB.matches=DB.matches.filter(m=>m.id!==t.dataset.del);else ask=t.dataset.del;save();render();return}
- if(t.dataset.delp){if(prev===t.dataset.delp)DB.players=DB.players.filter(p=>p.id!==t.dataset.delp);else ask=t.dataset.delp;save();render();return}
+ if(t.dataset.pl){view='player';cur=t.dataset.pl;php=0;enm=false;render();return}
+ if(t.dataset.del&&!RO(DB.matches.find(x=>x.id===t.dataset.del))){if(prev===t.dataset.del)DB.matches=DB.matches.filter(m=>m.id!==t.dataset.del);else ask=t.dataset.del;save();render();return}
+ if(t.dataset.delp&&canEditP(t.dataset.delp)){if(prev===t.dataset.delp)DB.players=DB.players.filter(p=>p.id!==t.dataset.delp);else ask=t.dataset.delp;save();render();return}
  if(t.dataset.act==='new')openNew();
  else if(t.dataset.act==='addp')addP();
  else if(t.dataset.act==='imp')document.getElementById('imp').click();
@@ -655,6 +687,8 @@ document.addEventListener('click',e=>{
  else if(t.dataset.act==='gcode')newCode();
  else if(t.dataset.act==='revoke')revoke();
  else if(t.dataset.act==='adda')addAlias();
+ else if(t.dataset.act==='edname'){enm=true;render();const i=document.getElementById('nn');if(i){i.focus();i.select()}}
+ else if(t.dataset.act==='cname'){enm=false;render()}
  else if(t.dataset.act==='ren')renamePlayer();
  else if(t.dataset.act==='delset'){if(M.sets.length<2)toast('Impossible : une analyse doit garder au moins un set');else{if(prev==='delset'){M.sets.splice(si,1);M.sets.forEach((s,i)=>s.n=i+1);si=Math.min(si,M.sets.length-1);S=M.sets[si];save()}else ask='delset';render()}}
  else if(t.dataset.act==='mkset')mkset();
@@ -663,7 +697,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{const t=e.target,id=t.dataset.name;if(id){S.players.find(p=>p.id===id).name=t.value.trim()||'Joueur';save();render()}else if(t.dataset.a){const p=S.players.find(x=>x.id===t.dataset.p),n=Math.max(0,Math.floor(+t.value||0)),d=n-get(p,t.dataset.a);if(d&&bump(p.id,t.dataset.a,d))S.history.push({pid:p.id,a:t.dataset.a,d});save();render()}});
 document.addEventListener('focusin',e=>{if(e.target.classList.contains('v'))e.target.select()});
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('v'))e.target.blur();if(e.key==='Enter'&&e.target.id==='np')addP();if(e.key==='Enter'&&e.target.id==='na')addAlias();if(e.key==='Enter'&&e.target.id==='nn')renamePlayer()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('v'))e.target.blur();if(e.key==='Enter'&&e.target.id==='np')addP();if(e.key==='Enter'&&e.target.id==='na')addAlias();if(e.key==='Enter'&&e.target.id==='nn')renamePlayer();if(e.key==='Escape'&&e.target.id==='nn'){enm=false;render()}if(e.key==='Enter'&&e.target.id==='ic')e.target.blur()});
 render();
 boot();
 </script>
